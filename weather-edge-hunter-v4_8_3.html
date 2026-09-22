@@ -1,0 +1,2179 @@
+<!doctype html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Weather Edge Hunter v4.8.2 — Execution Truth Gate</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#071018;--panel:#0d1823;--panel2:#0a141e;--line:#26384a;
+  --text:#eef7ff;--muted:#8fa7bb;--green:#55e6a5;--yellow:#ffd071;
+  --red:#ff7e91;--blue:#76b7ff;--cyan:#6ee7f2
+}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(#060c12,#09131d);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--text)}
+.wrap{max-width:1500px;margin:auto;padding:22px}
+.top,.actions,.pills,.toolbar,.modebar{display:flex;gap:9px;flex-wrap:wrap}
+.top{justify-content:space-between;align-items:flex-start}
+h1,h2,h3{margin:0}
+.sub,.small{color:var(--muted);font-size:12px;line-height:1.55}
+.panel,.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+button,a.btn{
+  border:0;border-radius:10px;padding:10px 13px;font-weight:800;cursor:pointer;
+  background:#eef7ff;color:#071018;text-decoration:none
+}
+button.secondary{background:#112131;color:var(--text);border:1px solid var(--line)}
+button.danger{background:#311722;color:#ffd8df;border:1px solid #713244}
+button.modebtn{background:#0b1722;color:var(--muted);border:1px solid var(--line)}
+button.modebtn.active{background:#17324a;color:#eef7ff;border-color:#4f84ad}
+.modebadge{font-size:11px;font-weight:900;letter-spacing:.04em;border-radius:999px;padding:4px 8px;border:1px solid var(--line)}
+.modebadge.resolution{color:var(--yellow);border-color:#665222}.modebadge.live{color:var(--green);border-color:#245d49}.modebadge.forecast{color:var(--blue);border-color:#345c88}.modebadge.other{color:var(--muted)}
+button:disabled{opacity:.55;cursor:not-allowed}
+input,select{
+  width:100%;background:#08131d;border:1px solid var(--line);color:var(--text);
+  padding:9px;border-radius:8px
+}
+.stats,.settings{display:grid;gap:10px;margin:15px 0}
+.clocks{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:15px 0}.clock b{display:block;font-size:20px}.clock .tz{font-size:11px;color:var(--muted);margin-top:3px}.guardbox{background:#0a141e;border:1px solid #345c88;border-radius:12px;padding:12px;margin-top:12px}.guardgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.guarditem{border:1px solid var(--line);border-radius:9px;padding:8px;background:#08131d}.guarditem b{display:block;margin-top:2px}.decision{font-size:15px;font-weight:900}.decision.bet{color:var(--green)}.decision.wait{color:var(--yellow)}.decision.pass{color:var(--red)}
+.stats{grid-template-columns:repeat(5,1fr)}
+.settings{grid-template-columns:repeat(10,1fr)}
+.stat b{display:block;font-size:23px}
+.lab{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.status{margin:12px 0;padding:11px;border:1px solid var(--line);border-radius:10px;color:var(--muted)}
+.status.good{color:var(--green);border-color:#245d49}
+.status.warn{color:var(--yellow);border-color:#665222}
+.status.bad{color:var(--red);border-color:#6d3040}
+.cards{display:grid;gap:10px}
+.row{display:grid;grid-template-columns:minmax(280px,2.1fr) repeat(7,minmax(82px,.55fr));gap:9px;align-items:center}
+.q{font-weight:800;line-height:1.35}
+.meta{font-size:12px;color:var(--muted);line-height:1.45}
+.metric b{display:block}
+.g{color:var(--green)} .y{color:var(--yellow)} .r{color:var(--red)} .b{color:var(--blue)} .c{color:var(--cyan)}
+.pill{font-size:11px;border:1px solid var(--line);border-radius:999px;padding:4px 7px}
+.pill.good{color:var(--green);border-color:#245d49}
+.pill.warn{color:var(--yellow);border-color:#665222}
+.pill.bad{color:var(--red);border-color:#6d3040}
+.reason{margin-top:9px;font-size:13px;line-height:1.5;white-space:pre-wrap}
+table{width:100%;border-collapse:collapse;font-size:12px}
+td,th{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{color:#dcecff;position:sticky;top:0;background:var(--panel);z-index:1}
+.tw{overflow:auto;max-height:620px}
+.sec{display:flex;justify-content:space-between;align-items:center;margin:20px 0 9px;gap:12px}
+.keyrow{display:grid;grid-template-columns:2fr 1fr 1fr;gap:9px;margin-top:10px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:var(--muted)}
+.dot.live{background:var(--green)} .dot.stale{background:var(--yellow)} .dot.dead{background:var(--red)}
+code{color:#d7e8ff}
+.sep{height:1px;background:var(--line);margin:12px 0}
+@media(max-width:1150px){
+  .settings{grid-template-columns:repeat(4,1fr)}
+  .stats{grid-template-columns:repeat(3,1fr)}
+  .row{grid-template-columns:1fr 1fr 1fr}
+  .q{grid-column:1/-1}
+}
+@media(max-width:720px){
+  .settings,.stats,.keyrow,.clocks,.guardgrid{grid-template-columns:1fr}
+  .row{grid-template-columns:1fr 1fr}
+  .q{grid-column:1/-1}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div>
+      <h1>Weather Edge Hunter v4.8.3 · Micro-Live Safety Gate</h1>
+      <div class="sub">
+        Polymarket discovery → contract/rule parser → 3-clock validation → YESTERDAY / TODAY / TOMORROW → dynamic peak window → Sweet Spot / Time-Zone Edge → station/source check → probability → model edge → resolution-adjusted edge → executable edge → Resolution Guard → Execution Truth Gate → Operational Risk Gate → manual confirm → trade ledger
+      </div>
+    </div>
+    <div class="actions">
+      <button id="scanBtn" onclick="scanAll()">SCAN NOW</button>
+      <button class="secondary" onclick="startFocus()">40 MIN MONITOR</button>
+      <button class="secondary" onclick="stopMonitor()">STOP</button>
+      <button class="secondary" onclick="runSelfTest()">API SELF-TEST</button>
+      <button class="secondary" onclick="refreshStations(true)">REFRESH STATIONS</button>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:12px">
+    <div class="lab">Weather backend / Cloudflare Worker URL</div>
+    <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:8px">
+      <input id="proxyBaseInput" placeholder="https://weather-edge-worker.YOUR-SUBDOMAIN.workers.dev">
+      <button class="secondary" onclick="saveProxy()">SAVE BACKEND</button>
+    </div>
+    <div class="small" style="margin-top:7px">v4.4 routes NOAA/AviationWeather and Open-Meteo through your Worker to avoid browser CORS and provider request storms. Polymarket remains direct.</div>
+  </div>
+
+  <div class="clocks">
+    <div class="panel clock"><span class="lab">1 · Your clock</span><b id="clockSofia">—</b><div class="tz">Europe/Sofia · Bulgaria</div></div>
+    <div class="panel clock"><span class="lab">2 · Market local clock</span><b id="clockMarket">—</b><div class="tz" id="clockMarketTz">Waiting for scanned market</div></div>
+    <div class="panel clock"><span class="lab">3 · Resolution/source clock</span><b id="clockSource">—</b><div class="tz" id="clockSourceTz">UTC until source timezone is known</div></div>
+  </div>
+
+  <div class="stats">
+    <div class="panel stat"><span class="lab">Weather markets</span><b id="markets">—</b></div>
+    <div class="panel stat"><span class="lab">Qualified</span><b id="qual">—</b></div>
+    <div class="panel stat"><span class="lab">Station feed</span><b id="stationHealth">—</b></div>
+    <div class="panel stat"><span class="lab">Next refresh</span><b id="refresh">—</b></div>
+    <div class="panel stat"><span class="lab">Focus</span><b id="focus">OFF</b></div>
+  </div>
+
+  <div class="panel">
+    <div class="settings">
+      <label>Min edge pp<input id="minEdge" type="number" value="12" step=".5"></label>
+      <label>Min confidence %<input id="minConf" type="number" value="75"></label>
+      <label>Max spread %<input id="maxSpread" type="number" value="5" step=".5"></label>
+      <label>Min liquidity $<input id="minLiq" type="number" value="1000"></label>
+      <label>Max positions<input id="maxPos" type="number" value="4" min="1" max="10"></label>
+      <label>Test stake $<input id="stake" type="number" value="5" min="1" step="1"></label>
+      <label>Session exposure $<input id="maxExposure" type="number" value="20" min="5" step="5"></label>
+      <label>Event exposure cap $<input id="maxEventExposure" type="number" value="5" min="1" step="1"></label>
+      <label>Daily loss cap $<input id="dailyLossCap" type="number" value="10" min="1" step="1"></label>
+      <label>Max consecutive losses<input id="maxConsecLoss" type="number" value="2" min="1" max="10"></label>
+      <label>Resolution risk max<input id="maxResRisk" type="number" value="20" min="0" max="100" step="5"></label>
+      <label>Fees buffer %<input id="feePct" type="number" value="0.5" min="0" step="0.1"></label>
+      <label>Slippage buffer %<input id="slipPct" type="number" value="1" min="0" step="0.1"></label>
+      <label>Refresh sec<input id="refreshSec" type="number" value="60" min="30"></label>
+      <label>METAR stale after min<input id="staleMin" type="number" value="120" min="30"></label>
+    </div>
+
+    <div class="keyrow">
+      <label>Gemini API key — НЕ го качвай в GitHub
+        <input id="gkey" type="password" placeholder="Paste for this session only">
+      </label>
+      <label>Gemini model
+        <input id="gmodel" value="gemini-2.5-flash">
+      </label>
+      <label>Gemini
+        <select id="guse"><option value="on">Qualified only</option><option value="off">Off</option></select>
+      </label>
+    </div>
+    <div class="small">
+      Gemini key се пази само в <code>sessionStorage</code>. Публичен GitHub Pages не може да пази API key или private key в тайна.
+    </div>
+  </div>
+
+  <div class="guardbox">
+    <b>Resolution Guard v1.3 · Micro-Live Safety</b>
+    <div class="small" style="margin-top:5px">Hard checks: target date in market timezone · exact NOAA site= station extraction · source/station evidence · calibrated bucket distribution · contract-probability consistency · YES/NO complement math · ACTIVE/unresolved market · verified token→outcome mapping · fresh CLOB book timestamp · asset/condition match · two-sided quote sanity · anomaly corroboration · $stake VWAP/depth verification · spread/liquidity · dynamic peak timing · daily-loss kill switch · consecutive-loss kill switch · duplicate/correlated event guard · one-event exposure cap · session exposure cap · manual confirmation. RESOLUTION mode never creates a new live entry.</div>
+  </div>
+
+  <div class="panel" style="margin-top:12px">
+    <div class="sec" style="margin-top:0">
+      <div>
+        <h2>Micro-Live Safety / Trade Ledger</h2>
+        <div class="small">The tool never sends an order. A qualified signal must be manually confirmed here and then executed by you on Polymarket. Ledger entries are stored only in this browser.</div>
+      </div>
+      <div class="actions">
+        <button class="secondary" onclick="exportLiveLedger()">EXPORT LEDGER</button>
+        <button class="secondary" onclick="clearTestLedger()">CLEAR TEST LEDGER</button>
+      </div>
+    </div>
+    <div class="stats" style="margin-top:8px">
+      <div class="panel stat"><span class="lab">Live safety</span><b id="liveSafety">—</b></div>
+      <div class="panel stat"><span class="lab">Daily realized P&amp;L</span><b id="dailyPnl">—</b></div>
+      <div class="panel stat"><span class="lab">Consecutive losses</span><b id="consecLoss">—</b></div>
+      <div class="panel stat"><span class="lab">Open exposure</span><b id="openExposure">—</b></div>
+      <div class="panel stat"><span class="lab">Ledger trades</span><b id="ledgerCount">—</b></div>
+    </div>
+    <div id="ledgerBox" class="small" style="margin-top:10px">No manually confirmed micro-live trades yet.</div>
+  </div>
+
+  <div id="status" class="status">Готов. Първо се зареждат METAR станциите, след това може SCAN NOW.</div>
+
+  <div class="panel" style="margin-top:12px">
+    <div class="lab" style="margin-bottom:8px">Market date filter</div>
+    <div class="modebar">
+      <button class="modebtn active" data-mode="ALL" onclick="setModeFilter('ALL')">ALL <span id="cntALL">—</span></button>
+      <button class="modebtn" data-mode="RESOLUTION" onclick="setModeFilter('RESOLUTION')">YESTERDAY / RESOLUTION <span id="cntRESOLUTION">—</span></button>
+      <button class="modebtn" data-mode="LIVE" onclick="setModeFilter('LIVE')">TODAY / LIVE <span id="cntLIVE">—</span></button>
+      <button class="modebtn" data-mode="FORECAST" onclick="setModeFilter('FORECAST')">TOMORROW+ / FORECAST <span id="cntFORECAST">—</span></button>
+    </div>
+    <div class="small" style="margin-top:8px">Класификацията се прави спрямо локалната дата на града/станцията, не спрямо часовника в България. Вчера = resolution mode; днес = live observations + remaining forecast; утре/бъдеще = forecast mode.</div>
+  </div>
+
+  <div class="sec">
+    <h2>Qualified positions</h2>
+    <span class="small">READY се показва само ако Resolution Gate, Execution Truth Gate и operational risk filters са PASS. Реален вход има само след MANUAL CONFIRM.</span>
+  </div>
+  <div id="entries" class="cards"></div>
+
+  <div class="sec">
+    <h2>Watch / Pass</h2>
+    <span class="small">Най-близките до вход + точната причина защо са блокирани.</span>
+  </div>
+  <div id="passes" class="cards"></div>
+
+  <div class="sec">
+    <div>
+      <h2>Active Polymarket temperature markets / Bulgaria time</h2>
+      <div class="small">STRICT MARKET-ONLY MODE · only active highest/lowest-temperature Polymarket contracts discovered from Gamma are shown · curated cities without an active market are hidden · LOWEST-temperature contracts are monitor-only until a separate low-temperature model is enabled</div>
+    </div>
+    <div class="actions">
+      <button class="secondary" onclick="refreshStations(true)">REFRESH</button>
+      <button class="secondary" onclick="exportLogs()">EXPORT LOG</button>
+    </div>
+  </div>
+
+  <div class="panel tw">
+    <table>
+      <thead>
+        <tr>
+          <th>City</th>
+          <th>ICAO</th>
+          <th>Station current</th>
+          <th>Yesterday verified high</th>
+          <th>Today verified high</th>
+          <th>Today calibrated high</th>
+          <th>Tomorrow est. high</th>
+          <th>Tomorrow likely range</th>
+          <th>Models</th>
+          <th>Last METAR</th>
+          <th>Age</th>
+          <th>Feed</th>
+          <th>Local now</th>
+          <th>Next 00:00 → Sofia</th>
+          <th>Rule note</th>
+        </tr>
+      </thead>
+      <tbody id="stbody"></tbody>
+    </table>
+  </div>
+
+  <div class="small" style="margin-top:15px">
+    Decision-support only. v4.8.3 preserves the v4.8.2 Execution Truth Gate and adds a Micro-Live Safety Gate: daily-loss kill switch, consecutive-loss stop, same-event correlation block, one-event exposure cap, persistent manual trade ledger, non-zero fee buffer and a mandatory manual-confirm step. v4.8.1 contract-probability/complement math and calibrated forecast layer are preserved. RESOLUTION mode is monitor-only.
+    Този HTML не изпълнява сделки и не съдържа wallet/private-key логика.
+  </div>
+</div>
+
+<script>
+"use strict";
+
+const $ = id => document.getElementById(id);
+const SOFIA = "Europe/Sofia";
+const MODELS = "ecmwf_ifs025,ncep_gefs025,icon_seamless";
+const METAR_API = "https://aviationweather.gov/api/data/metar";
+const PROXY_KEY="weh_proxy_base";
+function proxyBase(){ return (localStorage.getItem(PROXY_KEY)||"").replace(/\/$/,""); }
+function setProxyBase(v){ localStorage.setItem(PROXY_KEY,String(v||"").trim().replace(/\/$/,"")); }
+
+const ST = [
+  // CURRENT / VERIFIED POLYMARKET WEATHER STATIONS
+  ["New York City",["new york","nyc"],"KLGA",40.7769,-73.8740,"America/New_York","USA","Polymarket: LaGuardia / NOAA"],
+  ["Atlanta",["atlanta"],"KATL",33.6407,-84.4277,"America/New_York","USA","Polymarket: Hartsfield-Jackson / NOAA"],
+  ["London",["london"],"EGLC",51.5053,0.0553,"Europe/London","EUROPE","Polymarket: London City Airport / NOAA"],
+  ["Paris",["paris"],"LFPB",48.9694,2.4414,"Europe/Paris","EUROPE","Polymarket: Paris-Le Bourget / NOAA"],
+  ["Milan",["milan","milano","malpensa"],"LIMC",45.6306,8.7281,"Europe/Rome","EUROPE","Polymarket: Malpensa Intl / NOAA"],
+  ["Madrid",["madrid"],"LEMD",40.4983,-3.5676,"Europe/Madrid","EUROPE","Polymarket: Madrid-Barajas / NOAA"],
+  ["Munich",["munich","münchen"],"EDDM",48.3538,11.7861,"Europe/Berlin","EUROPE","Polymarket: Munich Airport / NOAA"],
+  ["Istanbul",["istanbul"],"LTFM",41.2753,28.7519,"Europe/Istanbul","EUROPE","Polymarket: Istanbul Airport / NOAA"],
+
+  // USA — CURATED FALLBACKS, VERIFY EACH MARKET RULE
+  ["Dallas",["dallas"],"KDAL",32.8471,-96.8518,"America/Chicago","USA","curated fallback; verify exact Polymarket station"],
+  ["Chicago",["chicago"],"KORD",41.9742,-87.9073,"America/Chicago","USA","curated fallback; verify exact Polymarket station"],
+  ["Miami",["miami"],"KMIA",25.7959,-80.2870,"America/New_York","USA","curated fallback; verify exact Polymarket station"],
+  ["Los Angeles",["los angeles","la"],"KLAX",33.9416,-118.4085,"America/Los_Angeles","USA","curated fallback; verify exact Polymarket station"],
+  ["Phoenix",["phoenix"],"KPHX",33.4342,-112.0116,"America/Phoenix","USA","curated fallback; verify exact Polymarket station"],
+  ["Las Vegas",["las vegas","vegas"],"KLAS",36.0840,-115.1537,"America/Los_Angeles","USA","curated fallback; verify exact Polymarket station"],
+  ["Seattle",["seattle"],"KSEA",47.4502,-122.3088,"America/Los_Angeles","USA","curated fallback; verify exact Polymarket station"],
+  ["San Francisco",["san francisco","sfo","sf"],"KSFO",37.6213,-122.3790,"America/Los_Angeles","USA","curated fallback; verify exact Polymarket station"],
+  ["Boston",["boston"],"KBOS",42.3656,-71.0096,"America/New_York","USA","curated fallback; verify exact Polymarket station"],
+  ["Washington DC",["washington dc","washington d.c."],"KDCA",38.8512,-77.0402,"America/New_York","USA","curated fallback; verify exact Polymarket station"],
+
+  // EUROPE — CURATED FALLBACKS, VERIFY EACH MARKET RULE
+  ["Berlin",["berlin"],"EDDB",52.3667,13.5033,"Europe/Berlin","EUROPE","curated fallback; verify exact Polymarket station"],
+  ["Amsterdam",["amsterdam"],"EHAM",52.3105,4.7683,"Europe/Amsterdam","EUROPE","curated fallback; verify exact Polymarket station"],
+  ["Brussels",["brussels","bruxelles"],"EBBR",50.9014,4.4844,"Europe/Brussels","EUROPE","curated fallback; verify exact Polymarket station"],
+  ["Vienna",["vienna","wien"],"LOWW",48.1103,16.5697,"Europe/Vienna","EUROPE","curated fallback; verify exact Polymarket station"],
+  ["Zurich",["zurich","zürich"],"LSZH",47.4581,8.5555,"Europe/Zurich","EUROPE","curated fallback; verify exact Polymarket station"],
+  ["Prague",["prague","praha"],"LKPR",50.1008,14.2600,"Europe/Prague","EUROPE","curated fallback; verify exact Polymarket station"],
+  ["Warsaw",["warsaw","warszawa"],"EPWA",52.1657,20.9671,"Europe/Warsaw","EUROPE","curated fallback; verify exact Polymarket station"],
+  ["Barcelona",["barcelona"],"LEBL",41.2974,2.0833,"Europe/Madrid","EUROPE","curated fallback; verify exact Polymarket station"],
+  ["Rome",["rome","roma"],"LIRF",41.8003,12.2389,"Europe/Rome","EUROPE","curated fallback; verify exact Polymarket station"],
+  ["Lisbon",["lisbon","lisboa"],"LPPT",38.7742,-9.1342,"Europe/Lisbon","EUROPE","curated fallback; verify exact Polymarket station"],
+  ["Dublin",["dublin"],"EIDW",53.4213,-6.2701,"Europe/Dublin","EUROPE","curated fallback; verify exact Polymarket station"],
+  ["Copenhagen",["copenhagen","københavn"],"EKCH",55.6181,12.6561,"Europe/Copenhagen","EUROPE","curated fallback; verify exact Polymarket station"],
+  ["Stockholm",["stockholm"],"ESSA",59.6519,17.9186,"Europe/Stockholm","EUROPE","curated fallback; verify exact Polymarket station"],
+  ["Oslo",["oslo"],"ENGM",60.1939,11.1004,"Europe/Oslo","EUROPE","curated fallback; verify exact Polymarket station"],
+  ["Helsinki",["helsinki"],"EFHK",60.3172,24.9633,"Europe/Helsinki","EUROPE","curated fallback; verify exact Polymarket station"],
+  ["Athens",["athens","athina"],"LGAV",37.9364,23.9445,"Europe/Athens","EUROPE","curated fallback; verify exact Polymarket station"],
+  ["Sofia",["sofia"],"LBSF",42.6967,23.4114,"Europe/Sofia","EUROPE","curated fallback; verify exact Polymarket station"],
+  ["Bucharest",["bucharest","bucuresti","bucurești"],"LROP",44.5711,26.0850,"Europe/Bucharest","EUROPE","curated fallback; verify exact Polymarket station"],
+  ["Budapest",["budapest"],"LHBP",47.4399,19.2610,"Europe/Budapest","EUROPE","curated fallback; verify exact Polymarket station"],
+  ["Belgrade",["belgrade","beograd"],"LYBE",44.8184,20.3091,"Europe/Belgrade","EUROPE","curated fallback; verify exact Polymarket station"],
+  ["Zagreb",["zagreb"],"LDZA",45.7429,16.0688,"Europe/Zagreb","EUROPE","curated fallback; verify exact Polymarket station"],
+  ["Paris-CDG fallback",["charles de gaulle","cdg"],"LFPG",49.0097,2.5479,"Europe/Paris","EUROPE","secondary only; current Polymarket Paris uses LFPB"]
+].map(x=>({city:x[0],aliases:x[1],icao:x[2],lat:x[3],lon:x[4],tz:x[5],region:x[6],note:x[7]}));
+
+let mon = null, tick = null, focusEnd = 0, nextRun = 0, busy = false, modeFilter = "ALL", lastScan = [];
+const stationCache = new Map();
+const forecastCache = new Map();
+const targetEnsembleCache = new Map();
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+const dynamicStationCodes = new Set();
+let discoveryCache = {at:0, markets:[]};
+
+const pct = x => x==null || !Number.isFinite(+x) ? "—" : (+x*100).toFixed(1)+"%";
+const money = x => x==null || !Number.isFinite(+x) ? "—" : "$"+Math.round(+x).toLocaleString();
+const clamp = (x,a,b)=>Math.max(a,Math.min(b,x));
+const cToF = c => c*9/5+32;
+const fToC = f => (f-32)*5/9;
+const round1 = x => Number.isFinite(+x) ? (+x).toFixed(1) : "—";
+
+function esc(s){
+  return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+async function J(url,opt={}){
+  const c = new AbortController();
+  const t = setTimeout(()=>c.abort(),18000);
+  try{
+    const r = await fetch(url,{...opt,signal:c.signal,cache:"no-store"});
+    if(!r.ok) throw Error(r.status+" "+r.statusText);
+    return await r.json();
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+function parseJSON(v,d=[]){
+  if(Array.isArray(v)) return v;
+  try { return JSON.parse(v) } catch { return d }
+}
+
+function sett(){
+  return {
+    e:+$("minEdge").value/100,
+    c:+$("minConf").value/100,
+    s:+$("maxSpread").value/100,
+    l:+$("minLiq").value,
+    n:Math.min(10,+$("maxPos").value||4),
+    stake:Math.max(1,+$("stake").value||5),
+    maxExposure:Math.max(1,+$("maxExposure").value||20),
+    maxEventExposure:Math.max(1,+$("maxEventExposure").value||5),
+    dailyLossCap:Math.max(1,+$("dailyLossCap").value||10),
+    maxConsecLoss:Math.max(1,+$("maxConsecLoss").value||2),
+    maxResRisk:clamp(+$("maxResRisk").value||30,0,100)/100,
+    fee:Math.max(0,+$("feePct").value||0)/100,
+    slip:Math.max(0,+$("slipPct").value||0)/100,
+    r:Math.max(30,+$("refreshSec").value||60),
+    stale:Math.max(30,+$("staleMin").value||120)
+  };
+}
+
+const LIVE_LEDGER_KEY="weh_live_ledger_v483";
+function liveLedger(){
+  try{ const a=JSON.parse(localStorage.getItem(LIVE_LEDGER_KEY)||"[]"); return Array.isArray(a)?a:[]; }catch(e){ return []; }
+}
+function saveLiveLedger(a){ localStorage.setItem(LIVE_LEDGER_KEY,JSON.stringify(a)); renderLedger(); }
+function bgDate(v=new Date()){
+  try{return new Intl.DateTimeFormat("en-CA",{timeZone:SOFIA,year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(v));}
+  catch(e){return new Date(v).toISOString().slice(0,10);}
+}
+function signalEventKey(x){
+  const station=x?.c?.st?.icao||"UNKNOWN";
+  const date=x?.c?.date||"UNKNOWN";
+  const kind=/lowest/i.test(x?.q||"")?"LOW":"HIGH";
+  return `${station}|${date}|${kind}`;
+}
+function ledgerRiskState(){
+  const st=sett(), all=liveLedger(), today=bgDate();
+  const closedToday=all.filter(t=>t.status==="CLOSED" && bgDate(t.closedAt||t.openedAt)===today);
+  const realized=closedToday.reduce((z,t)=>z+(Number.isFinite(+t.pnl)?+t.pnl:0),0);
+  const ordered=[...closedToday].sort((a,b)=>new Date(b.closedAt||0)-new Date(a.closedAt||0));
+  let consecutiveLosses=0;
+  for(const t of ordered){ if((+t.pnl)<0) consecutiveLosses++; else break; }
+  const open=all.filter(t=>t.status==="OPEN");
+  const openExposure=open.reduce((z,t)=>z+(+t.stake||0),0);
+  const killReasons=[];
+  if(realized<=-st.dailyLossCap) killReasons.push(`DAILY LOSS CAP: ${money(realized)} <= -${money(st.dailyLossCap)}`);
+  if(consecutiveLosses>=st.maxConsecLoss) killReasons.push(`CONSECUTIVE LOSS STOP: ${consecutiveLosses} >= ${st.maxConsecLoss}`);
+  return {all,today,closedToday,realized,consecutiveLosses,open,openExposure,kill:killReasons.length>0,killReasons};
+}
+function operationalRiskGuard(x,seenEvents=null){
+  const st=sett(), rs=ledgerRiskState(), reasons=[];
+  const key=signalEventKey(x);
+  if(x?.mode==="RESOLUTION") reasons.push("V4.8.3 RESOLUTION MODE: new live entry forbidden");
+  if(rs.kill) reasons.push(...rs.killReasons);
+  if(rs.openExposure+st.stake>st.maxExposure) reasons.push(`SESSION EXPOSURE: ${money(rs.openExposure+st.stake)} > ${money(st.maxExposure)}`);
+  const sameOpen=rs.open.filter(t=>t.eventKey===key);
+  const eventExposure=sameOpen.reduce((z,t)=>z+(+t.stake||0),0);
+  if(sameOpen.length) reasons.push("DUPLICATE/CORRELATED EVENT: an OPEN trade already exists for this station/date event");
+  if(eventExposure+st.stake>st.maxEventExposure) reasons.push(`EVENT EXPOSURE: ${money(eventExposure+st.stake)} > ${money(st.maxEventExposure)}`);
+  if(seenEvents && seenEvents.has(key)) reasons.push("CORRELATED SIGNAL: higher-ranked candidate from the same event already qualified in this scan");
+  return {pass:reasons.length===0,reasons,eventKey:key,eventExposure,openExposure:rs.openExposure,dailyRealized:rs.realized,consecutiveLosses:rs.consecutiveLosses};
+}
+function applyOperationalGuards(out){
+  const seen=new Set();
+  for(const x of out){
+    if(x.decision!=="BET") continue;
+    const og=operationalRiskGuard(x,seen);
+    x.opsGuard=og;
+    if(!og.pass){
+      x.r=[...(x.r||[]),...og.reasons];
+      x.decision="PASS"; x.side="PASS"; x.g="PASS";
+    } else {
+      x.manualConfirmRequired=true;
+      seen.add(og.eventKey);
+    }
+  }
+  return out;
+}
+function manualConfirm(slug){
+  const x=lastScan.find(z=>z.slug===slug);
+  if(!x || x.decision!=="BET") return alert("Signal is no longer qualified. Run SCAN NOW again.");
+  const og=operationalRiskGuard(x);
+  if(!og.pass) return alert("LIVE ENTRY BLOCKED:\n"+og.reasons.join("\n"));
+  const side=x.cand;
+  const tokenId=side==="YES"?x.p?.yToken:x.p?.nToken;
+  const ts=x.quoteGuard?.bookTimestamp||"unknown";
+  const summary=[
+    `Station: ${x.c?.st?.icao||"?"} (${x.c?.st?.city||"?"})`,
+    `Rules/source: ${x.gate?.meta?.source||"?"}`,
+    `Side: ${side}`,
+    `CLOB VWAP: ${pct(x.pr)}`,
+    `Executable edge: ${pct(x.edge)}`,
+    `Stake / max loss: $${x.stake.toFixed(2)} / $${x.stake.toFixed(2)}`,
+    `Market state: ACTIVE / unresolved / ${x.mode}`,
+    `Book timestamp: ${ts}`,
+    `Token: ${tokenId||"?"}`,
+    `Event: ${og.eventKey}`
+  ].join("\n");
+  if(!confirm("MANUAL MICRO-LIVE CONFIRMATION\n\n"+summary+"\n\nThis records the intended trade in the local ledger only. It does NOT send an order. Continue?")) return;
+  const a=liveLedger();
+  a.push({
+    id:`T${Date.now()}`,status:"OPEN",openedAt:new Date().toISOString(),eventKey:og.eventKey,
+    q:x.q,slug:x.slug,url:x.url,station:x.c?.st?.icao||null,stationSource:x.c?.st?.src||null,rulesSource:x.gate?.meta?.source||null,
+    side,tokenId:tokenId||null,entry:x.pr,stake:x.stake,maxLoss:x.stake,modelP:x.rawP,effectiveP:x.mp,
+    modelEdge:x.modelEdge,resolutionAdjustedEdge:x.resEdge,executableEdge:x.edge,quoteAgeSec:x.quoteGuard?.bookAgeSec,
+    quoteTimestamp:x.quoteGuard?.bookTimestamp,quoteSource:x.quoteGuard?.source,marketMode:x.mode,marketStateVerified:x.quoteGuard?.marketStatePass,
+    tokenMapPass:x.quoteGuard?.tokenMapPass,assetVerified:x.quoteGuard?.assetVerified,conditionVerified:x.quoteGuard?.conditionVerified,
+    note:"Manual confirmation recorded; external order execution not verified by this HTML."
+  });
+  saveLiveLedger(a);
+  alert("Recorded in Trade Ledger as OPEN. Execute manually on Polymarket only if the live order ticket still matches these values.");
+}
+function settleTrade(id,result){
+  const a=liveLedger(), t=a.find(z=>z.id===id);
+  if(!t || t.status!=="OPEN") return;
+  let pnl;
+  if(result==="WIN") pnl=(t.entry>0?t.stake/t.entry-t.stake:0);
+  else if(result==="LOSS") pnl=-t.stake;
+  else return;
+  if(!confirm(`Settle ${id} as ${result}?\nEstimated hold-to-resolution P&L: ${money(pnl)}`)) return;
+  t.status="CLOSED"; t.result=result; t.pnl=pnl; t.closedAt=new Date().toISOString();
+  saveLiveLedger(a);
+  if(lastScan.length){ applyOperationalGuards(lastScan); renderScan(lastScan); }
+}
+function renderLedger(){
+  const box=$("ledgerBox"); if(!box) return;
+  const rs=ledgerRiskState();
+  $("liveSafety").textContent=rs.kill?"KILL SWITCH":"ARMED";
+  $("dailyPnl").textContent=money(rs.realized);
+  $("consecLoss").textContent=String(rs.consecutiveLosses);
+  $("openExposure").textContent=money(rs.openExposure);
+  $("ledgerCount").textContent=String(rs.all.length);
+  if(!rs.all.length){ box.innerHTML="No manually confirmed micro-live trades yet."; return; }
+  const rows=[...rs.all].slice(-12).reverse().map(t=>`<div style="padding:7px 0;border-top:1px solid var(--line)"><b>${esc(t.status)} · ${esc(t.side)} · ${money(t.stake)}</b> · ${esc(t.station||"?")} · ${esc(t.q||"")}<br><span class="small">entry ${pct(t.entry)} · edge ${pct(t.executableEdge)} · ${esc(t.openedAt||"")}${t.status==="CLOSED"?` · ${esc(t.result||"")} · P&L ${money(t.pnl)}`:""}</span>${t.status==="OPEN"?`<div class="actions" style="margin-top:5px"><button class="secondary" onclick="settleTrade('${esc(t.id)}','WIN')">SETTLE WIN</button><button class="secondary" onclick="settleTrade('${esc(t.id)}','LOSS')">SETTLE LOSS</button></div>`:""}</div>`).join("");
+  box.innerHTML=rows;
+}
+function exportLiveLedger(){
+  const payload={exportedAt:new Date().toISOString(),version:"4.8.3-micro-live-safety-gate",settings:sett(),ledger:liveLedger()};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="weather-edge-hunter-v4_8_3-live-ledger.json"; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),500);
+}
+function clearTestLedger(){
+  if(!confirm("Clear the local micro-live test ledger? This cannot be undone unless you exported it first.")) return;
+  localStorage.removeItem(LIVE_LEDGER_KEY); renderLedger();
+}
+
+function ruleSiteCode(text){
+  const s=String(text||"");
+  const m=s.match(/[?&]site=([A-Za-z0-9]{4})\b/i);
+  return m?m[1].toUpperCase():null;
+}
+
+function normPlace(v){
+  return String(v||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-z0-9]+/g," ").trim().replace(/\s+/g," ");
+}
+function escRe(v){ return String(v).replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); }
+function stationMatchesMarketCity(st, marketCity){
+  const loc=normPlace(marketCity||"");
+  if(!loc || !st) return false;
+  const names=[st.city,st.marketCity,st.stationName,...(st.aliases||[])]
+    .map(normPlace).filter(a=>a.length>=3);
+  return names.includes(loc);
+}
+
+function station(text,m){
+  const raw=String(text||"");
+  const marketCity=marketLocationName(m)||"";
+  const site=ruleSiteCode(raw);
+
+  // 1) NOAA/weather.gov site=XXXX in the actual market rules is authoritative.
+  if(site){
+    const exact=ST.find(x=>x.icao.toUpperCase()===site);
+    if(exact) return {...exact,src:"NOAA site= in market rules",explicit:true,mappingVerified:true,marketCity};
+    // Never substitute another station when the rules explicitly name an unknown site.
+    return null;
+  }
+
+  // 2) ICAO token fallback: only accept when the token's station identity matches
+  // the market city. This blocks stale/example ICAO codes from contaminating a market
+  // (e.g. Busan/Wellington/Panama City -> KLAX).
+  for(const x of ST){
+    const re=new RegExp(`(?:^|[^A-Z0-9])${escRe(x.icao.toUpperCase())}(?:$|[^A-Z0-9])`);
+    if(re.test(raw.toUpperCase()) && stationMatchesMarketCity(x,marketCity)){
+      return {...x,src:"ICAO in market + city verified",explicit:true,mappingVerified:true,marketCity};
+    }
+  }
+
+  // 3) Curated city mapping may be used for display/forecast discovery only.
+  // It is deliberately NOT explicit, therefore Resolution Guard will block ENTRY.
+  const loc=normPlace(marketCity);
+  if(loc){
+    for(const x of ST){
+      const names=[x.city,x.marketCity,...(x.aliases||[])].map(normPlace).filter(a=>a.length>=3);
+      if(names.includes(loc)) return {...x,src:"curated city mapping",explicit:false,mappingVerified:true,marketCity};
+    }
+  }
+  return null;
+}
+
+
+
+function marketLocationName(m){
+  const q=String(m?.question||m?.event?.title||"");
+  // Polymarket questions are typically: "highest temperature in CITY be X on DATE".
+  // Stop at " be " first so the parsed city is exactly CITY, not "CITY be X".
+  let z=q.match(/(?:highest|lowest)\s+temperature\s+in\s+(.+?)(?:\s+be\s+|\s+on\s+)/i);
+  if(z) return z[1].trim();
+  z=q.match(/\bin\s+(.+?)(?:\s+be\s+|\s+on\s+|\?|$)/i);
+  return z?z[1].trim():null;
+}
+
+function stationNameFromRules(text){
+  const s=String(text||"");
+  const pats=[
+    /recorded by NOAA at the\s+(.+?)\s+Station\b/i,
+    /at the\s+(.+?)\s+Station\b/i,
+    /station\s+named\s+(.+?)(?:\.|,|;|\n|$)/i
+  ];
+  for(const p of pats){ const m=s.match(p); if(m) return m[1].trim(); }
+  return null;
+}
+
+async function geocodeBest(names){
+  for(const name of names.filter(Boolean)){
+    try{
+      const d=await J(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=5`);
+      const arr=d?.results||[];
+      if(arr.length){
+        const x=arr[0];
+        return {lat:x.latitude,lon:x.longitude,tz:x.timezone||"UTC",name:x.name||name,country:x.country||""};
+      }
+    }catch(e){ console.warn("geocode dynamic station",name,e); }
+  }
+  return null;
+}
+
+async function syncDynamicStations(markets){
+  // Recompute active-market membership on every discovery run so old cities do not stay active forever.
+  for(const x of ST){
+    x.activePolymarket=false;
+    x.activeMarketDates=[];
+    x.activeMarketKinds=[];
+    x.activeMarketCount=0;
+  }
+  const unique=new Map();
+  for(const m of (markets||[])){
+    if(!isStrictTemperatureMarket(m)) continue;
+    const text=marketText(m);
+    const code=ruleSiteCode(text);
+    if(!code) continue;
+    if(!unique.has(code)) unique.set(code,{m,dates:new Set(),kinds:new Set(),count:0});
+    const g=unique.get(code);
+    const d=dateOf(text,m.endDate);
+    if(d) g.dates.add(d);
+    const k=marketTemperatureKind(m);
+    if(k) g.kinds.add(k);
+    g.count++;
+  }
+
+  let added=0, updated=0;
+  for(const [code,g] of unique){
+    const m=g.m;
+    const text=marketText(m);
+    const city=marketLocationName(m)||code;
+    const stationName=stationNameFromRules(text);
+    const existing=ST.find(x=>x.icao.toUpperCase()===code);
+
+    if(existing){
+      existing.explicitFromMarket=true;
+      existing.activePolymarket=true;
+      existing.marketCity=city;
+      existing.stationName=stationName||existing.stationName||existing.city;
+      existing.activeMarketDates=[...g.dates].sort();
+      existing.activeMarketKinds=[...g.kinds].sort();
+      existing.activeMarketCount=g.count;
+      if(!existing.note.includes("ACTIVE POLYMARKET")) existing.note=`ACTIVE POLYMARKET · ${existing.note}`;
+      dynamicStationCodes.add(code);
+      updated++;
+      continue;
+    }
+
+    const geo=await geocodeBest([
+      stationName ? `${stationName} Airport` : null,
+      stationName,
+      city
+    ]);
+    if(!geo){
+      console.warn("Could not geocode dynamic Polymarket station",code,city,stationName);
+      continue;
+    }
+
+    const region=(geo.country||"").toLowerCase().includes("united states")?"USA":"GLOBAL";
+    ST.push({
+      city,
+      aliases:[city.toLowerCase(),...(stationName?[stationName.toLowerCase()]:[])],
+      icao:code,
+      lat:geo.lat,
+      lon:geo.lon,
+      tz:geo.tz,
+      region,
+      note:`ACTIVE POLYMARKET · dynamically discovered from NOAA rule site=${code}${stationName?` · ${stationName}`:""}`,
+      dynamic:true,
+      explicitFromMarket:true,
+      activePolymarket:true,
+      activeMarketDates:[...g.dates].sort(),
+      activeMarketKinds:[...g.kinds].sort(),
+      activeMarketCount:g.count,
+      stationName:stationName||geo.name
+    });
+    dynamicStationCodes.add(code);
+    added++;
+  }
+  return {added,updated,totalCodes:unique.size};
+}
+
+function localISO(d,tz){
+  const p=new Intl.DateTimeFormat("en-CA",{timeZone:tz,year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(d);
+  const o=Object.fromEntries(p.map(x=>[x.type,x.value]));
+  return `${o.year}-${o.month}-${o.day}`;
+}
+
+function dateOf(text,fallback){
+  const M={january:1,february:2,march:3,april:4,may:5,june:6,july:7,august:8,september:9,october:10,november:11,december:12};
+  let m=(text||"").match(/(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2})(?:,\s*(20\d{2}))?/i);
+  if(m){
+    const y=+(m[3]||new Date().getFullYear()),mo=M[m[1].toLowerCase()],d=+m[2];
+    return `${y}-${String(mo).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+  }
+  const z=(text||"").match(/\b(20\d{2}-\d{2}-\d{2})\b/);
+  return z?z[1]:(fallback?String(fallback).slice(0,10):null);
+}
+
+function marketText(m){
+  return [m.question,m.description,m.rules,m.resolutionSource,m.resolution_source,m.additionalContext,m.additional_context,m.event?.description]
+    .filter(Boolean).join(" \n");
+}
+
+function extractResolutionMeta(m,c){
+  const text=marketText(m);
+  const low=text.toLowerCase();
+  const urls=[...text.matchAll(/https?:\/\/[^\s<>)\]"']+/gi)].map(z=>z[0].replace(/[.,;]+$/,''));
+  let source="UNVERIFIED";
+  // Primary settlement language wins over fallback language. Many Polymarket rules mention
+  // Weather Underground only as fallback, so WU must not override an explicit NOAA/weather.gov source.
+  if(/weather\.gov|national weather service|\bnws\b/.test(low)) source="NWS / weather.gov";
+  else if(/noaa|ncei|climate\.gov/.test(low)) source="NOAA / NCEI";
+  else if(/aviationweather|aviation weather|metar/.test(low)) source="AviationWeather / METAR";
+  else if(/weather underground|wunderground/.test(low)) source="Weather Underground";
+  else if(/accuweather/.test(low)) source="AccuWeather";
+  else if(/meteoblue/.test(low)) source="Meteoblue";
+
+  const explicitStation=!!c?.st && !!c.st.explicit;
+  const namedSource=source!=="UNVERIFIED" || urls.length>0;
+  const clarification=/additional context|clarification/.test(low);
+  return {
+    source, url:urls[0]||null, namedSource, explicitStation, clarification,
+    sourceTz:c?.st?.tz||null,
+    status:namedSource?(explicitStation?"SOURCE + STATION FOUND":"SOURCE FOUND / STATION VERIFY"):"SOURCE NOT PARSED"
+  };
+}
+
+
+function formatClock(tz){
+  try{return new Intl.DateTimeFormat("bg-BG",{timeZone:tz,weekday:"short",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false}).format(new Date());}
+  catch{return "—";}
+}
+let activeMarketTz=null,activeSourceTz="UTC";
+let mappingBlocks=[];
+function updateClocks(){
+  if($("clockSofia")) $("clockSofia").textContent=formatClock(SOFIA);
+  if($("clockMarket")) $("clockMarket").textContent=activeMarketTz?formatClock(activeMarketTz):"—";
+  if($("clockMarketTz")) $("clockMarketTz").textContent=activeMarketTz||"Waiting for scanned market";
+  if($("clockSource")) $("clockSource").textContent=formatClock(activeSourceTz||"UTC");
+  if($("clockSourceTz")) $("clockSourceTz").textContent=activeSourceTz||"UTC";
+}
+
+function contract(m){
+  const q=m.question||"", text=marketText(m);
+  const st=station(text,m), d=dateOf(text,m.endDate), kind=marketTemperatureKind(m);
+  let r=q.match(/(-?\d+(?:\.\d+)?)\s*(?:-|–|to)\s*(-?\d+(?:\.\d+)?)\s*°?\s*([FC])\b/i);
+  if(r) return {kind,lo:+r[1],hi:+r[2],u:r[3].toUpperCase(),date:d,st,label:`${r[1]}–${r[2]}°${r[3].toUpperCase()}`};
+
+  r=q.match(/(-?\d+(?:\.\d+)?)\s*°?\s*([FC])[^?]*(or below|or lower|or under|or less)/i);
+  if(r) return {kind,op:"<=",v:+r[1],u:r[2].toUpperCase(),date:d,st,label:`≤${r[1]}°${r[2].toUpperCase()}`};
+
+  r=q.match(/(-?\d+(?:\.\d+)?)\s*°?\s*([FC])[^?]*(or higher|or above|or warmer|or over|or more)/i);
+  if(r) return {kind,op:">=",v:+r[1],u:r[2].toUpperCase(),date:d,st,label:`≥${r[1]}°${r[2].toUpperCase()}`};
+
+  r=q.match(/\b(?:exactly|be)\s*(-?\d+(?:\.\d+)?)\s*°?\s*([FC])\b/i);
+  if(r) return {kind,exact:true,v:+r[1],lo:+r[1]-.5,hi:+r[1]+.5,u:r[2].toUpperCase(),date:d,st,label:`${r[1]}°${r[2].toUpperCase()} exact`};
+
+  return null;
+}
+
+function hardMappingGuard(m,c){
+  const marketCity=marketLocationName(m)||"";
+  const site=ruleSiteCode(marketText(m));
+  const st=c?.st||null;
+
+  if(!st){
+    return {pass:false,reason:"UNRESOLVED_STATION",marketCity,site,station:null,stationSource:null};
+  }
+  if(st.mappingVerified!==true){
+    return {pass:false,reason:"MAPPING_NOT_VERIFIED",marketCity,site,station:st.icao,stationSource:st.src||null};
+  }
+  // Curated/geocoded mappings are useful for display only, never for a trade signal.
+  if(st.explicit!==true){
+    return {pass:false,reason:"NON_EXPLICIT_STATION",marketCity,site,station:st.icao,stationSource:st.src||null};
+  }
+  // If market rules contain an authoritative weather.gov site= code, it must match exactly.
+  if(site && String(st.icao||"").toUpperCase()!==site){
+    return {pass:false,reason:"SITE_MISMATCH",marketCity,site,station:st.icao,stationSource:st.src||null};
+  }
+  // ICAO-token fallback is allowed only when the station identity matches the parsed market city.
+  if(!site && !stationMatchesMarketCity(st,marketCity)){
+    return {pass:false,reason:"STATION_MISMATCH",marketCity,site:null,station:st.icao,stationSource:st.src||null};
+  }
+  return {pass:true,reason:"VERIFIED",marketCity,site,station:st.icao,stationSource:st.src||null};
+}
+
+function parseObsDate(v){
+  if(v==null) return null;
+  if(typeof v==="number"){
+    const ms=v<1e12?v*1000:v;
+    const d=new Date(ms);
+    return Number.isNaN(d.getTime())?null:d;
+  }
+  const s=String(v).trim();
+  if(/^\d+(\.\d+)?$/.test(s)){
+    const n=+s, ms=n<1e12?n*1000:n, d=new Date(ms);
+    return Number.isNaN(d.getTime())?null:d;
+  }
+  const d=new Date(s);
+  return Number.isNaN(d.getTime())?null:d;
+}
+
+function obsDate(x){
+  return parseObsDate(x.obsTime ?? x.reportTime ?? x.receiptTime ?? x.report_time ?? x.time);
+}
+
+function obsTempC(x){
+  const candidates=[x.temp,x.temperature,x.tempC,x.temp_c];
+  for(const v of candidates) if(v!==null && v!=="" && Number.isFinite(+v)) return +v;
+  return null;
+}
+
+function fmtLocal(d,tz){
+  if(!d) return "—";
+  return new Intl.DateTimeFormat("bg-BG",{
+    timeZone:tz,day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false
+  }).format(d);
+}
+
+function ageMinutes(d){
+  if(!d) return Infinity;
+  return Math.max(0,(Date.now()-d.getTime())/60000);
+}
+
+function feedClass(status){
+  return status==="LIVE"?"live":status==="STALE"?"stale":"dead";
+}
+
+
+function addDaysISO(iso,days){
+  const [y,m,d]=iso.split("-").map(Number);
+  const z=new Date(Date.UTC(y,m-1,d+days,12,0,0));
+  return `${z.getUTCFullYear()}-${String(z.getUTCMonth()+1).padStart(2,"0")}-${String(z.getUTCDate()).padStart(2,"0")}`;
+}
+
+function summarizeValues(vals){
+  if(!vals.length) return null;
+  const a=[...vals].sort((x,y)=>x-y);
+  const mean=a.reduce((x,y)=>x+y,0)/a.length;
+  const q=t=>{
+    if(a.length===1) return a[0];
+    const pos=(a.length-1)*t, base=Math.floor(pos), rest=pos-base;
+    return a[base+1]!==undefined?a[base]+rest*(a[base+1]-a[base]):a[base];
+  };
+  return {mean,median:q(.5),low:q(.20),high:q(.80),n:a.length};
+}
+
+async function Jretry429(url, attempts=4){
+  let last;
+  for(let i=0;i<attempts;i++){
+    try{return await J(url);}
+    catch(e){
+      last=e;
+      const msg=String(e?.message||e);
+      if(!msg.startsWith("429")) throw e;
+      await sleep(700*Math.pow(2,i));
+    }
+  }
+  throw last;
+}
+
+async function fetchForecastWindow(st,force=false){
+  const cached=forecastCache.get(st.icao);
+  if(cached && Date.now()-cached.fetchedAt < 10*60000) return cached;
+
+  const out={icao:st.icao,ok:false,today:null,tomorrow:null,error:null,fetchedAt:Date.now(),source:"OPEN_METEO_3MODEL"};
+  try{
+    if(proxyBase()){
+      const d=await J(`${proxyBase()}/api/forecast?icao=${encodeURIComponent(st.icao)}&lat=${encodeURIComponent(st.lat)}&lon=${encodeURIComponent(st.lon)}&tz=${encodeURIComponent(st.tz)}`);
+      const f=d?.forecast;
+      if(!f) throw Error(d?.error||"Backend forecast unavailable");
+      Object.assign(out,f,{fetchedAt:Date.now()});
+      forecastCache.set(st.icao,out);
+      return out;
+    }
+    const today=localISO(new Date(),st.tz), tomorrow=addDaysISO(today,1);
+    // Browser-reliable path: standard Forecast API with three deterministic global models.
+    // This is much lighter than the full ensemble endpoint and avoids repeated 429s.
+    const models="ecmwf_ifs025,gfs_seamless,icon_seamless";
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${st.lat}&longitude=${st.lon}&daily=temperature_2m_max,temperature_2m_min&models=${encodeURIComponent(models)}&temperature_unit=celsius&timezone=${encodeURIComponent(st.tz)}&forecast_days=3`;
+    const d=await Jretry429(url,3), daily=d.daily||{}, times=daily.time||[];
+    const maxKeys=Object.keys(daily).filter(k=>k.startsWith("temperature_2m_max") && Array.isArray(daily[k]));
+    const minKeys=Object.keys(daily).filter(k=>k.startsWith("temperature_2m_min") && Array.isArray(daily[k]));
+    const calc=date=>{
+      const i=times.indexOf(date); if(i<0) return null;
+      const highs=maxKeys.map(k=>+daily[k][i]).filter(Number.isFinite);
+      const lows=minKeys.map(k=>+daily[k][i]).filter(Number.isFinite);
+      const hi=summarizeValues(highs), lo=summarizeValues(lows);
+      return hi?{date,meanHighC:hi.mean,medianHighC:hi.median,lowHighC:Math.min(...highs),highHighC:Math.max(...highs),meanLowC:lo?.mean??null,members:hi.n,memberHighsC:highs,source:"3-model consensus"}:null;
+    };
+    out.today=calc(today); out.tomorrow=calc(tomorrow); out.ok=!!(out.today||out.tomorrow);
+    if(!out.ok) throw Error("No 3-model forecast values for today/tomorrow");
+  }catch(e){ out.error=e?.message||String(e); }
+  forecastCache.set(st.icao,out);
+  return out;
+}
+
+async function fetchForecastBatch(stations,force=false){
+  const todo=[];
+  for(const st of stations){
+    const c=forecastCache.get(st.icao);
+    if(force || !c || Date.now()-c.fetchedAt>=10*60000) todo.push(st);
+  }
+  if(!todo.length) return stations.map(st=>forecastCache.get(st.icao)).filter(Boolean);
+  // Open-Meteo documents comma-separated coordinates for multi-location requests.
+  // Chunk to keep URL/payload reasonable and avoid rate bursts.
+  const chunks=[]; for(let i=0;i<todo.length;i+=8) chunks.push(todo.slice(i,i+8));
+  for(const chunk of chunks){
+    try{
+      const lats=chunk.map(x=>x.lat).join(','), lons=chunk.map(x=>x.lon).join(',');
+      const tzs=chunk.map(x=>x.tz).join(',');
+      const models="ecmwf_ifs025,gfs_seamless,icon_seamless";
+      const url=`https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}&daily=temperature_2m_max,temperature_2m_min&models=${encodeURIComponent(models)}&temperature_unit=celsius&timezone=${encodeURIComponent(tzs)}&forecast_days=3`;
+      const raw=await Jretry429(url,3);
+      const arr=Array.isArray(raw)?raw:[raw];
+      chunk.forEach((st,idx)=>{
+        const d=arr[idx]||{}, daily=d.daily||{}, times=daily.time||[];
+        const maxKeys=Object.keys(daily).filter(k=>k.startsWith("temperature_2m_max") && Array.isArray(daily[k]));
+        const minKeys=Object.keys(daily).filter(k=>k.startsWith("temperature_2m_min") && Array.isArray(daily[k]));
+        const calc=date=>{
+          const i=times.indexOf(date); if(i<0) return null;
+          const highs=maxKeys.map(k=>+daily[k][i]).filter(Number.isFinite);
+          const lows=minKeys.map(k=>+daily[k][i]).filter(Number.isFinite);
+          if(!highs.length) return null;
+          const hi=summarizeValues(highs), lo=summarizeValues(lows);
+          return {date,meanHighC:hi.mean,medianHighC:hi.median,lowHighC:Math.min(...highs),highHighC:Math.max(...highs),meanLowC:lo?.mean??null,members:hi.n,memberHighsC:highs,source:"3-model consensus"};
+        };
+        const today=localISO(new Date(),st.tz), tomorrow=addDaysISO(today,1);
+        forecastCache.set(st.icao,{icao:st.icao,ok:true,today:calc(today),tomorrow:calc(tomorrow),error:null,fetchedAt:Date.now(),source:"OPEN_METEO_3MODEL_BATCH"});
+      });
+    }catch(e){
+      // Do not fail the whole UI. Mark chunk and continue; individual on-demand calls may retry later.
+      for(const st of chunk) forecastCache.set(st.icao,{icao:st.icao,ok:false,today:null,tomorrow:null,error:e?.message||String(e),fetchedAt:Date.now(),source:"OPEN_METEO_3MODEL_BATCH"});
+    }
+    await sleep(500);
+  }
+  return stations.map(st=>forecastCache.get(st.icao)).filter(Boolean);
+}
+
+function forecastHighText(f){
+  if(!f || !Number.isFinite(f.meanHighC)) return "—";
+  return `${round1(f.meanHighC)}°C / ${round1(cToF(f.meanHighC))}°F`;
+}
+function forecastRangeText(f){
+  if(!f || !Number.isFinite(f.lowHighC) || !Number.isFinite(f.highHighC)) return "—";
+  return `${round1(f.lowHighC)}–${round1(f.highHighC)}°C / ${round1(cToF(f.lowHighC))}–${round1(cToF(f.highHighC))}°F`;
+}
+
+async function fetchStationObs(st,force=false){
+  const cached=stationCache.get(st.icao);
+  if(cached){
+    const maxAge=proxyBase()?6*60000:45000;
+    if(Date.now()-cached.fetchedAt < maxAge) return cached;
+  }
+
+  const result={
+    icao:st.icao, city:st.city, tz:st.tz, ok:false, status:"ERROR",
+    currentC:null, highC:null, lowC:null, yesterdayHighC:null, yesterdayLowC:null,lastObs:null,ageMin:Infinity,
+    raw:null,count:0,error:null,provider:null,official:false,verifiedStation:false,proxyCurrentC:null,proxyProjectedHighC:null,fetchedAt:Date.now()
+  };
+
+  // Direct AviationWeather browser calls are useful when allowed, but AWC documents
+  // that CORS may be blocked. Therefore this build falls back to Open-Meteo as a
+  // NON-OFFICIAL live observation proxy. Resolution mode never treats the proxy as NOAA truth.
+  try{
+    if(proxyBase()){
+      const d=await J(`${proxyBase()}/api/station?icao=${encodeURIComponent(st.icao)}&tz=${encodeURIComponent(st.tz)}`);
+      const o=d?.observation;
+      if(!o) throw Error(d?.error||"Backend observation unavailable");
+      Object.assign(result,o,{lastObs:o.lastObs?new Date(o.lastObs):null,fetchedAt:Date.now()});
+      stationCache.set(st.icao,result);
+      return result;
+    }
+    const url=`${METAR_API}?ids=${encodeURIComponent(st.icao)}&format=json&hours=60`;
+    const data=await J(url);
+    const arr=Array.isArray(data)?data:(Array.isArray(data?.data)?data.data:[]);
+    const rows=arr.map(x=>({x,d:obsDate(x),t:obsTempC(x)})).filter(o=>o.d&&Number.isFinite(o.t)).sort((a,b)=>b.d-a.d);
+    if(!rows.length) throw Error("No valid METAR temperature observations");
+    const today=localISO(new Date(),st.tz), yesterday=addDaysISO(today,-1);
+    const todayRows=rows.filter(o=>localISO(o.d,st.tz)===today), yesterdayRows=rows.filter(o=>localISO(o.d,st.tz)===yesterday);
+    result.currentC=rows[0].t; result.lastObs=rows[0].d; result.raw=rows[0].x.rawOb??rows[0].x.raw_text??null; result.ageMin=ageMinutes(result.lastObs); result.count=todayRows.length;
+    if(todayRows.length){const temps=todayRows.map(o=>o.t);result.highC=Math.max(...temps);result.lowC=Math.min(...temps);}
+    if(yesterdayRows.length){const temps=yesterdayRows.map(o=>o.t);result.yesterdayHighC=Math.max(...temps);result.yesterdayLowC=Math.min(...temps);}
+    const stale=sett().stale;
+    result.status=result.ageMin<=stale?"LIVE":result.ageMin<=stale*2?"STALE":"EXPIRED";
+    result.provider="AVIATIONWEATHER_METAR"; result.official=false; result.verifiedStation=true; result.ok=result.status==="LIVE";
+  }catch(metarErr){
+    // Browser-only deployment cannot read AviationWeather because AWC explicitly disables CORS.
+    // Do not fire a second per-station Open-Meteo request here: that caused request storms and 429s.
+    // Forecast/model data is loaded separately and must never masquerade as an observation.
+    result.currentC=null; result.highC=null; result.lowC=null; result.yesterdayHighC=null; result.yesterdayLowC=null;
+    result.lastObs=null; result.ageMin=Infinity; result.count=0; result.status="NO_VERIFIED_FEED";
+    result.provider="BROWSER_CORS_BLOCK"; result.official=false; result.verifiedStation=false; result.ok=false;
+    result.error="Verified station observation unavailable in browser-only mode. AviationWeather CORS blocked: "+(metarErr?.message||String(metarErr));
+
+  }
+
+  stationCache.set(st.icao,result);
+  return result;
+}
+
+function stationTempText(o){
+  if(!o || !Number.isFinite(o.currentC)) return "—";
+  return `${round1(o.currentC)}°C / ${round1(cToF(o.currentC))}°F`;
+}
+function stationHighText(o,key="highC"){
+  if(!o || !Number.isFinite(o[key])) return "—";
+  return `${round1(o[key])}°C / ${round1(cToF(o[key]))}°F`;
+}
+function proxyProjectedHighText(o){
+  if(!o || !Number.isFinite(o.proxyProjectedHighC)) return "—";
+  return `${round1(o.proxyProjectedHighC)}°C / ${round1(cToF(o.proxyProjectedHighC))}°F`;
+}
+
+function nextMidnightSofia(tz){
+  const now=Date.now();
+  for(let i=1;i<=192;i++){
+    const d=new Date(now+i*5*60000);
+    const t=new Intl.DateTimeFormat("en-GB",{timeZone:tz,hour:"2-digit",minute:"2-digit",hour12:false}).format(d);
+    if(t==="00:00" || t==="24:00"){
+      return new Intl.DateTimeFormat("bg-BG",{
+        timeZone:SOFIA,weekday:"short",day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false
+      }).format(d);
+    }
+  }
+  return "—";
+}
+
+async function refreshStations(force=false){
+  const b=$("stbody");
+  b.innerHTML=`<tr><td colspan="15" class="small">Discovering current Polymarket weather stations → loading observations + calibrated 3-model forecast…</td></tr>`;
+
+  let syncInfo={added:0,updated:0,totalCodes:0};
+  try{
+    const markets=await discover(force);
+    syncInfo=await syncDynamicStations(markets);
+  }catch(e){
+    console.warn("dynamic station sync failed",e);
+  }
+
+  const results=[];
+  const activeStations=ST.filter(x=>x.activePolymarket);
+  const fetchSet=activeStations;
+
+  if(proxyBase()){
+    try{
+      const payload={stations:fetchSet.map(x=>({icao:x.icao,lat:x.lat,lon:x.lon,tz:x.tz}))};
+      const d=await J(`${proxyBase()}/api/bundle`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(payload)});
+      if(!d?.ok) throw Error(d?.error||"Backend bundle failed");
+      for(const st of fetchSet){
+        const o=d.observations?.[st.icao]||{icao:st.icao,status:"NO_DATA",verifiedStation:false,error:"No backend observation"};
+        if(o.lastObs) o.lastObs=new Date(o.lastObs);
+        o.fetchedAt=Date.now();
+        stationCache.set(st.icao,o);
+        const f=d.forecasts?.[st.icao]||{icao:st.icao,ok:false,today:null,tomorrow:null,error:"No backend forecast"};
+        f.fetchedAt=Date.now(); forecastCache.set(st.icao,f);
+        results.push({st,o,f});
+      }
+    }catch(e){
+      console.warn("backend bundle failed",e);
+      for(const st of fetchSet){
+        const o={icao:st.icao,status:"BACKEND_ERROR",verifiedStation:false,error:e?.message||String(e),ageMin:Infinity,lastObs:null};
+        const f={icao:st.icao,ok:false,today:null,tomorrow:null,error:e?.message||String(e)};
+        results.push({st,o,f}); stationCache.set(st.icao,o); forecastCache.set(st.icao,f);
+      }
+    }
+  }else{
+    await fetchForecastBatch(fetchSet,force);
+    const queue=[...fetchSet];
+    async function worker(){
+      while(queue.length){
+        const st=queue.shift();
+        const o=await fetchStationObs(st,force);
+        const f=forecastCache.get(st.icao)||await fetchForecastWindow(st,force);
+        results.push({st,o,f});
+        await sleep(150);
+      }
+    }
+    await Promise.all(Array.from({length:2},worker));
+  }
+
+  const byIcao=new Map(results.map(r=>[r.st.icao,r]));
+  b.innerHTML="";
+
+  // v4.7: show ONLY stations required by strict active Polymarket temperature markets.
+  if(!activeStations.length){
+    b.innerHTML=`<tr><td colspan="15" class="small">No strict active Polymarket temperature markets discovered right now. Curated/non-market cities are intentionally hidden.</td></tr>`;
+  }
+  for(const x of activeStations){
+    const r=byIcao.get(x.icao);
+    const o=r?.o||{status:"NOT_ACTIVE",provider:null,ageMin:Infinity,lastObs:null,error:"Not refreshed: no active Polymarket market currently requires this station."};
+    const f=r?.f||null;
+    const now=new Intl.DateTimeFormat("bg-BG",{timeZone:x.tz,weekday:"short",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date());
+    const age=Number.isFinite(o.ageMin)?`${Math.round(o.ageMin)} min`:"—";
+    const obs=fmtLocal(o.lastObs,x.tz);
+    const feed=`<span class="dot ${feedClass(o.status)}"></span>${esc(o.status)}${o.provider?`<div class="meta">${esc(o.provider)}</div>`:""}`;
+    const title=o.error?` title="${esc(o.error)}"`:"";
+    b.innerHTML+=`
+      <tr${title}>
+        <td>${esc(x.city)}</td>
+        <td><b>${esc(x.icao)}</b></td>
+        <td>${stationTempText(o)}</td>
+        <td>${stationHighText(o,"yesterdayHighC")}</td>
+        <td>${stationHighText(o,"highC")}</td>
+        <td title="${f?.today?.date?esc(f.today.date):""}${f?.error?" · "+esc(f.error):""}">${forecastHighText(f?.today)}</td>
+        <td title="${f?.tomorrow?.date?esc(f.tomorrow.date):""}${f?.error?" · "+esc(f.error):""}">${forecastHighText(f?.tomorrow)}</td>
+        <td>${forecastRangeText(f?.tomorrow)}</td>
+        <td>${f?.tomorrow?.members??f?.today?.members??"—"}</td>
+        <td>${obs}</td>
+        <td>${age}</td>
+        <td>${feed}</td>
+        <td>${now}</td>
+        <td>${nextMidnightSofia(x.tz)}</td>
+        <td>${esc(`${x.activeMarketKinds?.join("/")||"TEMP"} · ${x.activeMarketDates?.join(", ")||"date n/a"} · ${x.activeMarketCount||0} active contracts · ${x.note}`)}</td>
+      </tr>`;
+  }
+
+  const live=results.filter(x=>x.o.status==="LIVE" && x.o.verifiedStation).length;
+  $("stationHealth").textContent=`${live}/${activeStations.length||0}`;
+  $("stationHealth").className=activeStations.length && live===activeStations.length?"g":live>=Math.ceil((activeStations.length||1)*.7)?"y":"r";
+  const dyn=dynamicStationCodes.size;
+  const active=ST.filter(x=>x.activePolymarket).length;
+  const st=$("status");
+  if(st && !busy){
+    st.className="status good";
+    st.textContent=`Polymarket-only watchlist ready: ${active} active temperature-market stations · ${dyn} NOAA rule codes · ${syncInfo.added} newly added. Curated cities without an active market are hidden.`;
+  }
+
+  return results;
+}
+
+function marketTemperatureKind(m){
+  const q=String(m?.question||m?.event?.title||"").toLowerCase();
+  if(/\bhighest\s+temperature\b/.test(q)) return "HIGH";
+  if(/\blowest\s+temperature\b/.test(q)) return "LOW";
+  return null;
+}
+function isStrictTemperatureMarket(m){
+  if(!m || m.active===false || m.closed===true) return false;
+  if(m.acceptingOrders===false || m.enableOrderBook===false || m.archived===true) return false;
+  const q=String(m.question||"").trim();
+  if(!/\b(?:highest|lowest)\s+temperature\s+in\s+.+?\s+on\s+/i.test(q)) return false;
+  if(!/(-?\d+(?:\.\d+)?)\s*°?\s*[FC]\b/i.test(q)) return false;
+  return true;
+}
+
+async function discover(force=false){
+  if(!force && discoveryCache.markets.length && Date.now()-discoveryCache.at < 60000) return discoveryCache.markets;
+  const map=new Map();
+  // Primary: official Gamma public-search endpoint. /markets does not document a q parameter,
+  // which caused silent zero-market scans in earlier builds.
+  for(const q of ["highest temperature","temperature","weather"]){
+    try{
+      const d=await J(`https://gamma-api.polymarket.com/public-search?q=${encodeURIComponent(q)}&events_status=active&limit_per_type=50&search_profiles=false&search_tags=false&keep_closed_markets=0`);
+      for(const e of (d?.events||[])){
+        for(const mm of (e?.markets||[])){
+          const m={...mm};
+          if(!m.description && e.description) m.description=e.description;
+          if(!m.resolutionSource && e.resolutionSource) m.resolutionSource=e.resolutionSource;
+          m.event={...(m.event||{}),description:e.description||"",title:e.title||"",slug:e.slug||""};
+          const t=((m.question||"")+" "+(m.description||"")+" "+(e.title||"")).toLowerCase();
+          if(isStrictTemperatureMarket(m)) map.set(String(m.id||m.conditionId||m.slug),m);
+        }
+      }
+    }catch(e){ console.warn("public-search discover",q,e); }
+  }
+  // Fallback: list recent active markets and filter client-side.
+  if(!map.size){
+    for(const offset of [0,100,200,300,400]){
+      try{
+        const a=await J(`https://gamma-api.polymarket.com/markets?active=true&closed=false&limit=100&offset=${offset}&order=startDate&ascending=false`);
+        for(const m of (Array.isArray(a)?a:[])){
+          const t=((m.question||"")+" "+(m.description||"")).toLowerCase();
+          if(isStrictTemperatureMarket(m)) map.set(String(m.id||m.conditionId||m.slug),m);
+        }
+      }catch(e){ console.warn("market-list discover",offset,e); }
+    }
+  }
+  const markets=[...map.values()];
+  discoveryCache={at:Date.now(),markets};
+  return markets;
+}
+
+function validClobPrice(v){
+  const x=+v;
+  return Number.isFinite(x) && x>0 && x<1 ? x : null;
+}
+function parseClobTimestamp(v){
+  if(v==null || v==="") return null;
+  const n=+v;
+  if(Number.isFinite(n)){
+    const ms=n<1e11?n*1000:n;
+    const d=new Date(ms);
+    return Number.isNaN(d.getTime())?null:d;
+  }
+  const d=new Date(String(v));
+  return Number.isNaN(d.getTime())?null:d;
+}
+function marketExecutionState(m,w){
+  const reasons=[];
+  if(!m) reasons.push("V4.8.2 MARKET STATE: market object missing");
+  if(m?.active===false) reasons.push("V4.8.2 MARKET STATE: market inactive");
+  if(m?.closed===true) reasons.push("V4.8.2 MARKET STATE: market closed");
+  if(m?.archived===true) reasons.push("V4.8.2 MARKET STATE: market archived");
+  if(m?.resolved===true || m?.isResolved===true) reasons.push("V4.8.2 MARKET STATE: market resolved");
+  if(m?.acceptingOrders===false) reasons.push("V4.8.2 MARKET STATE: acceptingOrders=false");
+  if(m?.enableOrderBook===false) reasons.push("V4.8.2 MARKET STATE: order book disabled");
+  // Resolution mode is observation/settlement only. Never open a new position on a past-date market.
+  if(w?.mode==="RESOLUTION") reasons.push("V4.8.2 MARKET STATE: resolution-mode market is monitor-only");
+  return {pass:reasons.length===0,reasons};
+}
+function clobTokenMap(m){
+  const ids=parseJSON(m?.clobTokenIds), outs=parseJSON(m?.outcomes,["Yes","No"]);
+  const norm=outs.map(x=>String(x).trim().toLowerCase());
+  const yi=norm.indexOf("yes"), ni=norm.indexOf("no");
+  const reasons=[];
+  if(yi<0 || ni<0 || yi===ni) reasons.push("V4.8.2 TOKEN MAP: YES/NO outcomes not uniquely identified");
+  if(!Array.isArray(ids) || ids.length!==outs.length) reasons.push("V4.8.2 TOKEN MAP: token/outcome array length mismatch");
+  const yToken=yi>=0?String(ids?.[yi]??""):"", nToken=ni>=0?String(ids?.[ni]??""):"";
+  if(!yToken || !nToken) reasons.push("V4.8.2 TOKEN MAP: missing YES/NO token id");
+  if(yToken && nToken && yToken===nToken) reasons.push("V4.8.2 TOKEN MAP: YES and NO token ids are identical");
+  return {pass:reasons.length===0,reasons,ids,outs,yi,ni,yToken,nToken,conditionId:String(m?.conditionId??m?.condition_id??"")};
+}
+async function clobExecutionQuote(tokenId,stake,expected={}){
+  const out={
+    top:null,vwap:null,price:null,spread:null,depthVerified:false,availableNotional:0,
+    source:"CLOB_UNAVAILABLE",error:null,tokenId:String(tokenId||""),outcome:expected.outcome||null,
+    assetId:null,marketId:null,bookTimestamp:null,bookAgeSec:null,fresh:false,
+    assetVerified:false,conditionVerified:null,bookHash:null,fetchedAt:new Date().toISOString()
+  };
+  if(!tokenId) return out;
+
+  try{
+    const d=await J(`https://clob.polymarket.com/price?token_id=${tokenId}&side=BUY`);
+    out.top=validClobPrice(d?.price);
+  }catch(e){ out.error="price: "+(e?.message||String(e)); }
+
+  try{
+    const d=await J(`https://clob.polymarket.com/spread?token_id=${tokenId}`);
+    const sp=+d?.spread;
+    out.spread=Number.isFinite(sp)&&sp>=0?sp:null;
+  }catch(e){ /* secondary */ }
+
+  try{
+    const book=await J(`https://clob.polymarket.com/book?token_id=${tokenId}`);
+    out.assetId=String(book?.asset_id??book?.assetId??"");
+    out.marketId=String(book?.market??book?.condition_id??book?.conditionId??"");
+    out.bookHash=book?.hash??null;
+    out.assetVerified=!!out.assetId && out.assetId===String(tokenId);
+    out.conditionVerified=expected.conditionId ? (!!out.marketId && out.marketId===String(expected.conditionId)) : null;
+    const ts=parseClobTimestamp(book?.timestamp??book?.time??book?.updated_at??book?.updatedAt);
+    if(ts){
+      out.bookTimestamp=ts.toISOString();
+      out.bookAgeSec=Math.max(0,(Date.now()-ts.getTime())/1000);
+      out.fresh=out.bookAgeSec<=300; // 5-minute hard freshness window.
+    }
+
+    const asks=(book?.asks||[])
+      .map(z=>({p:validClobPrice(z?.price),size:+z?.size}))
+      .filter(z=>z.p!=null && Number.isFinite(z.size) && z.size>0)
+      .sort((a,b)=>a.p-b.p);
+
+    if(asks.length){
+      out.top=asks[0].p;
+      let remain=Math.max(.01,+stake||5), cost=0, shares=0;
+      for(const a of asks){
+        const levelNotional=a.p*a.size;
+        out.availableNotional+=levelNotional;
+        if(remain<=1e-9) break;
+        const takeCost=Math.min(remain,levelNotional);
+        const takeShares=takeCost/a.p;
+        cost+=takeCost; shares+=takeShares; remain-=takeCost;
+      }
+      if(remain<=.01 && shares>0){
+        out.vwap=cost/shares;
+        out.price=out.vwap;
+        out.depthVerified=true;
+        out.source="CLOB_BOOK_VWAP";
+      }
+    }
+  }catch(e){
+    out.error=(out.error?out.error+" | ":"")+"book: "+(e?.message||String(e));
+  }
+
+  if(out.price==null && out.top!=null){
+    out.price=out.top;
+    out.source="CLOB_TOP_ONLY";
+  }
+  return out;
+}
+async function price(m){
+  const tm=clobTokenMap(m), ps=parseJSON(m.outcomePrices);
+  const stake=sett().stake;
+  if(!tm.pass){
+    return {y:null,n:null,yRef:null,nRef:null,sp:null,liq:+(m.liquidityNum??m.liquidity??0),tokenMap:tm,quoteErrors:[...tm.reasons]};
+  }
+
+  const [yq,nq]=await Promise.all([
+    clobExecutionQuote(tm.yToken,stake,{outcome:"YES",conditionId:tm.conditionId}),
+    clobExecutionQuote(tm.nToken,stake,{outcome:"NO",conditionId:tm.conditionId})
+  ]);
+
+  const yRef=validClobPrice(ps[tm.yi]), nRef=validClobPrice(ps[tm.ni]);
+
+  return {
+    y:yq.price,n:nq.price,
+    yTop:yq.top,nTop:nq.top,yVwap:yq.vwap,nVwap:nq.vwap,
+    yDepthVerified:yq.depthVerified,nDepthVerified:nq.depthVerified,
+    ySource:yq.source,nSource:nq.source,
+    ySpread:yq.spread,nSpread:nq.spread,
+    yAvailableNotional:yq.availableNotional,nAvailableNotional:nq.availableNotional,
+    yBookAgeSec:yq.bookAgeSec,nBookAgeSec:nq.bookAgeSec,yFresh:yq.fresh,nFresh:nq.fresh,
+    yAssetVerified:yq.assetVerified,nAssetVerified:nq.assetVerified,
+    yConditionVerified:yq.conditionVerified,nConditionVerified:nq.conditionVerified,
+    yBookTimestamp:yq.bookTimestamp,nBookTimestamp:nq.bookTimestamp,
+    yToken:tm.yToken,nToken:tm.nToken,tokenMap:tm,
+    yRef,nRef,
+    quoteErrors:[yq.error,nq.error].filter(Boolean),
+    sp:[yq.spread,nq.spread].filter(Number.isFinite).reduce((a,b)=>Math.max(a,b),null),
+    liq:+(m.liquidityNum??m.liquidity??0)
+  };
+}
+
+async function geocode(name){
+  const d=await J(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=1`);
+  const x=d.results?.[0];
+  if(!x) throw Error("geocode failed");
+  return {lat:x.latitude,lon:x.longitude,tz:x.timezone||"auto",name:x.name};
+}
+
+function marketMode(date,tz){
+  if(!date) return {mode:"OTHER",label:"UNKNOWN DATE",delta:null};
+  const today=localISO(new Date(),tz||SOFIA);
+  const toUTC=iso=>{const [y,m,d]=iso.split("-").map(Number);return Date.UTC(y,m-1,d);};
+  const delta=Math.round((toUTC(date)-toUTC(today))/86400000);
+  if(delta<0) return {mode:"RESOLUTION",label:delta===-1?"YESTERDAY / RESOLUTION":`PAST ${Math.abs(delta)}D / RESOLUTION`,delta};
+  if(delta===0) return {mode:"LIVE",label:"TODAY / LIVE",delta};
+  return {mode:"FORECAST",label:delta===1?"TOMORROW / FORECAST":`FUTURE +${delta}D / FORECAST`,delta};
+}
+
+function normalCdf(x){
+  const t=1/(1+.2316419*Math.abs(x));
+  const d=.3989423*Math.exp(-x*x/2);
+  let p=1-d*t*(.3193815+t*(-.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));
+  return x>=0?p:1-p;
+}
+function intervalProbNormal(c,mean,sd){
+  const cdf=v=>normalCdf((v-mean)/sd);
+  if(c.lo!=null) return clamp(cdf(c.hi+.0001)-cdf(c.lo-.0001),0,1);
+  if(c.op==="<=") return clamp(cdf(c.v+.0001),0,1);
+  return clamp(1-cdf(c.v-.0001),0,1);
+}
+
+function resolutionBucketValue(v){
+  // Polymarket weather buckets are expressed in whole degrees; model members must
+  // be mapped to discrete buckets before probability/edge is computed.
+  return Math.round(v);
+}
+function hit(v,c){
+  const b=resolutionBucketValue(v);
+  if(c.exact) return b===c.v;
+  if(c.lo!=null && c.hi!=null) return b>=c.lo && b<=c.hi;
+  if(c.op==="<=") return b<=c.v;
+  if(c.op===">=") return b>=c.v;
+  return false;
+}
+function bucketDistribution(values){
+  const m=new Map();
+  for(const v of values){
+    const b=resolutionBucketValue(v);
+    m.set(b,(m.get(b)||0)+1);
+  }
+  const n=values.length||1;
+  return [...m.entries()].map(([bucket,count])=>({bucket,count,p:count/n})).sort((a,b)=>b.p-a.p||a.bucket-b.bucket);
+}
+function bucketSummary(dist,unit){
+  return dist.slice(0,5).map(x=>`${x.bucket}°${unit} ${pct(x.p)}`).join(" · ");
+}
+
+// v4.5: calibrated discrete-temperature model.
+// The old engine treated 3 forecast members as 3 literal probability votes
+// (0 / 33 / 67 / 100%). That is too coarse for exact-temperature buckets.
+// We now treat each model high as the centre of an uncertainty kernel and
+// average the kernels into a mixture distribution.
+function bucketBounds(c){
+  if(c.lo!=null && c.hi!=null) return {lo:c.lo-.5, hi:c.hi+.5};
+  if(c.exact) return {lo:c.v-.5, hi:c.v+.5};
+  if(c.op==="<=") return {lo:-Infinity, hi:c.v+.5};
+  if(c.op===">=") return {lo:c.v-.5, hi:Infinity};
+  return {lo:-Infinity,hi:Infinity};
+}
+function kernelProbForConstraint(c,mu,sigma){
+  const b=bucketBounds(c);
+  const cdf=v=>normalCdf((v-mu)/sigma);
+  if(!Number.isFinite(b.lo)) return clamp(cdf(b.hi),0,1);
+  if(!Number.isFinite(b.hi)) return clamp(1-cdf(b.lo),0,1);
+  return clamp(cdf(b.hi)-cdf(b.lo),0,1);
+}
+function modelSpread(values){
+  if(!values?.length) return 0;
+  const mean=values.reduce((a,b)=>a+b,0)/values.length;
+  return Math.sqrt(values.reduce((a,b)=>a+(b-mean)**2,0)/Math.max(1,values.length-1));
+}
+function calibrationSigma(unit,mode,dateDelta,values,obs){
+  // Conservative floor based on forecast horizon. This intentionally prevents
+  // 3 closely clustered models from being interpreted as near certainty.
+  let baseC;
+  if(mode==="LIVE") baseC=.85;
+  else if((dateDelta??1)<=1) baseC=1.25;
+  else if((dateDelta??1)<=2) baseC=1.45;
+  else baseC=1.45+.18*Math.min(5,(dateDelta??3)-2);
+
+  const spread=modelSpread(values);
+  const spreadC=unit==="F"?spread/1.8:spread;
+  let sigmaC=Math.max(baseC, spreadC*.85);
+
+  // If the live observed high is already close to / above the model centre,
+  // retain some extra uncertainty for the remaining intraday maximum.
+  if(mode==="LIVE" && Number.isFinite(obs)){
+    const mean=values.reduce((a,b)=>a+b,0)/Math.max(1,values.length);
+    const gapC=(unit==="F"?Math.abs(obs-mean)/1.8:Math.abs(obs-mean));
+    if(gapC>.8) sigmaC=Math.max(sigmaC,.95+gapC*.35);
+  }
+  return unit==="F"?sigmaC*1.8:sigmaC;
+}
+function calibratedEventProbability(c,values,sigma){
+  if(!values?.length || !Number.isFinite(sigma) || sigma<=0) return null;
+  return clamp(values.reduce((s,mu)=>s+kernelProbForConstraint(c,mu,sigma),0)/values.length,0,1);
+}
+function normalizeDistribution(dist){
+  const a=(dist||[]).filter(x=>Number.isFinite(x?.p)&&x.p>0);
+  const z=a.reduce((s,x)=>s+x.p,0);
+  return z>0?a.map(x=>({...x,p:x.p/z})):a;
+}
+function calibratedBucketDistribution(values,sigma){
+  if(!values?.length) return [];
+  const lo=Math.floor(Math.min(...values)-5*sigma);
+  const hi=Math.ceil(Math.max(...values)+5*sigma);
+  const out=[];
+  for(let b=lo;b<=hi;b++){
+    const c={exact:true,v:b};
+    const p=calibratedEventProbability(c,values,sigma);
+    if(p>.00005) out.push({bucket:b,p});
+  }
+  // The discrete distribution is the single source of truth used by BOTH the UI
+  // and contract probability. This prevents displayed bucket probabilities from
+  // disagreeing with YES/NO math.
+  return normalizeDistribution(out).filter(x=>x.p>.00005).sort((a,b)=>b.p-a.p||a.bucket-b.bucket);
+}
+function bucketMatchesConstraint(bucket,c){
+  if(c?.exact) return bucket===c.v;
+  if(c?.lo!=null && c?.hi!=null) return bucket>=c.lo && bucket<=c.hi;
+  if(c?.op==="<=") return bucket<=c.v;
+  if(c?.op===">=") return bucket>=c.v;
+  return false;
+}
+function contractProbabilityFromDistribution(c,dist){
+  const d=normalizeDistribution(dist||[]);
+  if(!d.length) return null;
+  return clamp(d.reduce((s,x)=>s+(bucketMatchesConstraint(x.bucket,c)?x.p:0),0),0,1);
+}
+
+function applyLiveObservedFloorToDist(dist,obs){
+  if(!Array.isArray(dist) || !Number.isFinite(obs)) return normalizeDistribution(dist||[]);
+  const flo=Math.ceil(obs-1e-9);
+  const kept=(dist||[]).map(x=>({bucket:x.bucket,p:(x.bucket<flo?0:x.p)})).filter(x=>x.p>0);
+  return normalizeDistribution(kept).filter(x=>x.p>.00005);
+}
+function applyLiveObservedFloorToEvent(c,p,obs){
+  if(!Number.isFinite(obs) || !c) return p;
+  const flo=Math.ceil(obs-1e-9);
+  if(c.exact && c.v<flo) return 0;
+  if(c.op==='<=' && c.v<flo) return 0;
+  if(c.lo!=null && c.hi!=null && c.hi<flo) return 0;
+  return p;
+}
+
+async function stationSnapshot(st,u,mode){
+  if(!st) return null;
+  const o=await fetchStationObs(st,false);
+  // Resolution requires the exact official source; AviationWeather METAR is useful
+  // station evidence but is not itself the market's final NOAA WRH settlement source.
+  if(mode==="RESOLUTION" && !o?.official) return {feed:o,value:null};
+  // LIVE mode may use only verified station observations. Forecast/grid proxy values
+  // never populate observed highs.
+  if(mode==="LIVE" && !o?.verifiedStation) return {feed:o,value:null};
+  const key=mode==="RESOLUTION"?"yesterdayHighC":"highC";
+  const val=o?.[key];
+  if(!o || !Number.isFinite(val)) return {feed:o,value:null};
+  return {feed:o,value:u==="F"?cToF(val):val};
+}
+
+function targetForecastFromCache(st,date,u){
+  const f=forecastCache.get(st?.icao);
+  if(!f) return null;
+  const x=[f.today,f.tomorrow].find(z=>z?.date===date);
+  if(!x) return null;
+  const conv=v=>u==="F"?cToF(v):v;
+  return {mean:conv(x.meanHighC),low:conv(x.lowHighC),high:conv(x.highHighC),n:x.members};
+}
+
+
+function cachedMemberHighs(st,date,u){
+  const f=forecastCache.get(st?.icao);
+  if(!f) return null;
+  const x=[f.today,f.tomorrow].find(z=>z?.date===date && Array.isArray(z.memberHighsC));
+  if(!x) return null;
+  return x.memberHighsC.map(v=>u==="F"?cToF(v):v);
+}
+
+async function fetchTargetMemberHighs(loc, st, date, u, days){
+  const cached=cachedMemberHighs(st,date,u);
+  if(cached?.length) return {high:cached,peakHour:15,source:"3_MODEL_CACHE"};
+  if(st){
+    const f=await fetchForecastWindow(st,false);
+    const x=[f?.today,f?.tomorrow].find(z=>z?.date===date && Array.isArray(z.memberHighsC));
+    if(x?.memberHighsC?.length) return {high:x.memberHighsC.map(v=>u==="F"?cToF(v):v),peakHour:15,source:"3_MODEL_FORECAST"};
+  }
+  // Last-resort single-location lightweight forecast request.
+  const key=`${st?.icao||loc.name||loc.lat+","+loc.lon}|${date}|${u}`;
+  const hitc=targetEnsembleCache.get(key);
+  if(hitc && Date.now()-hitc.fetchedAt<10*60000) return hitc;
+  const models="ecmwf_ifs025,gfs_seamless,icon_seamless";
+  const unit=u==="F"?"fahrenheit":"celsius";
+  const url=`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&daily=temperature_2m_max&models=${encodeURIComponent(models)}&temperature_unit=${unit}&timezone=${encodeURIComponent(loc.tz)}&forecast_days=${Math.min(10,days)}`;
+  const d=await Jretry429(url,3), daily=d.daily||{}, times=daily.time||[], i=times.indexOf(date);
+  if(i<0) throw Error("outside forecast horizon");
+  const vals=Object.keys(daily).filter(k=>k.startsWith("temperature_2m_max")&&Array.isArray(daily[k])).map(k=>+daily[k][i]).filter(Number.isFinite);
+  if(!vals.length) throw Error("no 3-model forecast values");
+  const out={high:vals,peakHour:15,source:"3_MODEL_DIRECT",fetchedAt:Date.now()};
+  targetEnsembleCache.set(key,out); return out;
+}
+
+function tzParts(tz, date=new Date()){
+  const parts=new Intl.DateTimeFormat('en-CA',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(date);
+  const o={}; for(const x of parts) if(x.type!=='literal') o[x.type]=x.value;
+  return {date:`${o.year}-${o.month}-${o.day}`,hour:+o.hour,minute:+o.minute};
+}
+function tzOffsetMinutes(tz, date){
+  const p=tzParts(tz,date);
+  const asUTC=Date.UTC(+p.date.slice(0,4),+p.date.slice(5,7)-1,+p.date.slice(8,10),p.hour,p.minute);
+  return Math.round((asUTC-date.getTime())/60000);
+}
+function zonedLocalToUTC(dateStr,hour,minute,tz){
+  const [y,m,d]=dateStr.split('-').map(Number);
+  let guess=new Date(Date.UTC(y,m-1,d,hour,minute,0));
+  for(let i=0;i<3;i++){
+    const off=tzOffsetMinutes(tz,guess);
+    guess=new Date(Date.UTC(y,m-1,d,hour,minute,0)-off*60000);
+  }
+  return guess;
+}
+function fmtWindowSofia(dateStr,startHour,endHour,tz){
+  const norm=(h)=>((h%24)+24)%24;
+  const sd=new Date(zonedLocalToUTC(dateStr,norm(startHour),0,tz));
+  const ed=new Date(zonedLocalToUTC(dateStr,norm(endHour),0,tz));
+  if(endHour<=startHour) ed.setUTCDate(ed.getUTCDate()+1);
+  const f=d=>new Intl.DateTimeFormat('bg-BG',{timeZone:SOFIA,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(d);
+  return `${f(sd)}–${f(ed)} BG`;
+}
+function timingSignal(w,c,p){
+  const peak=Number.isFinite(w.peakHour)?w.peakHour:15;
+  const best=fmtWindowSofia(c.date,peak-1,peak+2,w.loc.tz);
+  if(w.mode==='RESOLUTION') return {stage:'RESOLUTION MODE',edgeType:'RESOLUTION EDGE CANDIDATE',best,deltaMin:null,block:false};
+  if(w.mode==='FORECAST') return {stage:'FORECAST EDGE',edgeType:'NORMAL',best,deltaMin:null,block:false};
+  const now=tzParts(w.loc.tz);
+  const delta=(now.hour*60+now.minute)-peak*60;
+  let stage='WATCH', block=false;
+  if(delta < -180){stage='TOO EARLY'; block=true;}
+  else if(delta < -60) stage='WATCH';
+  else if(delta <= 120) stage='SWEET SPOT';
+  else if(delta <= 240) stage='LATE / PRICE GONE';
+  else stage='LATE / WATCH RESOLUTION';
+  const price=Math.min(...[p?.y,p?.n].filter(Number.isFinite));
+  const infoMature=delta>=0 && w.obs!=null && Math.abs((w.obs??w.mean)-w.mean)<=Math.max(1,w.sd*1.5);
+  const edgeType=infoMature && Number.isFinite(price) && price<.95 ? 'TIME-ZONE EDGE CANDIDATE' : 'NORMAL';
+  return {stage,edgeType,best,deltaMin:delta,block};
+}
+
+async function wx(c,m){
+  if(c?.kind==="LOW") throw Error("LOW_TEMP_MARKET_MONITOR_ONLY: lowest-temperature market detected; trading signal blocked until low-temperature model is enabled");
+  let loc;
+  if(c.st) loc={lat:c.st.lat,lon:c.st.lon,tz:c.st.tz,name:c.st.city};
+  else{
+    const mm=(m.question||"").match(/\bin\s+(.+?)(?:\s+on\s+|\?|$)/i);
+    if(!mm) throw Error("no location");
+    loc=await geocode(mm[1]);
+  }
+  if(!c.date) throw Error("no target date");
+
+  const md=marketMode(c.date,loc.tz);
+  const snap=await stationSnapshot(c.st,c.u,md.mode);
+  const obs=snap?.value ?? null, feed=snap?.feed ?? null;
+
+  // Past market: use actual station observations, with a small uncertainty band for
+  // rounding/reporting differences. Do not pretend a forecast is historical evidence.
+  if(md.mode==="RESOLUTION"){
+    if(obs==null) throw Error("No yesterday station high available for resolution mode");
+    const sd=c.u==="F"?.55:.30;
+    const p=intervalProbNormal(c,obs,sd);
+    let conf=.90;
+    if(feed?.status!=="LIVE") conf-=.08;
+    if(c.st?.src!=="ICAO in market") conf-=.10;
+    return {p,mean:obs,sd,n:1,conf:clamp(conf,.55,.97),obs,feed,loc,today:false,mode:md.mode,modeLabel:md.label,dateDelta:md.delta,source:"OBSERVED_RESOLUTION"};
+  }
+
+  const days=Math.max(3,(md.delta??1)+2);
+  const base=await fetchTargetMemberHighs(loc,c.st,c.date,c.u,days);
+  const stationBias=v48StationBias(c.st?.icao);
+  const high=base.high.map(z=>{ const corrected=z+stationBias; return md.mode==="LIVE" && obs!=null?Math.max(corrected,obs):corrected; });
+  const peakHour=base.peakHour;
+
+  const memberDist=bucketDistribution(high);
+  const voteP=high.filter(v=>hit(v,c)).length/high.length;
+  const mean=high.reduce((a,b)=>a+b,0)/high.length;
+  const memberSd=Math.sqrt(high.reduce((a,b)=>a+(b-mean)**2,0)/Math.max(1,high.length-1));
+
+  // v4.8.1: build ONE discrete calibrated distribution, condition it on the
+  // live observed maximum, then derive the exact contract probability from that
+  // same distribution. This removes the previous mapper inconsistency.
+  const calSigma=calibrationSigma(c.u,md.mode,md.delta,high,obs);
+  const kernelP=calibratedEventProbability(c,high,calSigma);
+  let dist=calibratedBucketDistribution(high,calSigma);
+  if(md.mode==='LIVE' && Number.isFinite(obs)){
+    dist=applyLiveObservedFloorToDist(dist,obs);
+  }
+  const p=contractProbabilityFromDistribution(c,dist);
+
+  // Confidence is about forecast quality/uncertainty, not how extreme the side is.
+  // Three members alone can never create 90–100% confidence for an exact bucket.
+  const sigmaC=c.u==="F"?calSigma/1.8:calSigma;
+  const spreadC=c.u==="F"?memberSd/1.8:memberSd;
+  let conf=.73;
+  conf-=Math.min(.16,Math.max(0,sigmaC-.85)*.08);
+  conf-=Math.min(.10,spreadC*.035);
+  if(md.mode==="LIVE" && feed?.verifiedStation && feed.status==="LIVE") conf+=.06;
+  if(md.mode==="FORECAST") conf-=.02*Math.max(0,(md.delta??1)-1);
+  if(md.mode==="LIVE" && (!feed || feed.status!=="LIVE" || !feed.verifiedStation)) conf-=.22;
+  conf=clamp(conf,.30,.86);
+
+  return {
+    p,mean,sd:calSigma,memberSd,n:high.length,conf,obs,feed,loc,
+    today:md.mode==="LIVE",mode:md.mode,modeLabel:md.label,dateDelta:md.delta,
+    peakHour,dist,topBucket:dist[0]||null,memberDist,voteP,calSigma,
+    calibrationModel:"KERNEL_MIXTURE_V2_V481",stationBias,kernelP,contractPFromDist:p,
+    source:md.mode==="LIVE"?(obs!=null?"VERIFIED_STATION_PLUS_CALIBRATED_MODEL":"CALIBRATED_MODEL_ONLY"):"CALIBRATED_FORECAST"
+  };
+}
+
+function resolutionGate(m,c,w){
+  const reasons=[], warnings=[];
+  let pass=true;
+  const meta=extractResolutionMeta(m,c);
+
+  if(!c.date){ pass=false; reasons.push("Target date not parsed"); }
+  if(!c.st){
+    pass=false;
+    reasons.push("UNRESOLVED_STATION: no verified market→station mapping");
+  }else{
+    const marketCity=marketLocationName(m)||"";
+    const site=ruleSiteCode(marketText(m));
+    if(!site && !stationMatchesMarketCity(c.st,marketCity)){
+      pass=false;
+      reasons.push(`STATION_MISMATCH: ${marketCity||"unknown city"} → ${c.st.icao}`);
+    }
+    if(w.mode==="LIVE"){
+      if(!w.feed || !w.feed.verifiedStation || w.feed.status!=="LIVE"){
+        pass=false;
+        reasons.push("NO LIVE BET: verified station observation feed unavailable");
+      }
+    }
+    if(w.mode==="RESOLUTION"){
+      if(!w.feed?.official || w.obs==null){
+        pass=false;
+        reasons.push("Resolution mode requires exact official settlement source; proxy/METAR is insufficient");
+      }
+    }
+    if(!meta.explicitStation){
+      pass=false;
+      reasons.push("NO ENTRY: exact station not explicit in market rules/ICAO");
+    }
+  }
+
+  if(!meta.namedSource){
+    warnings.push("Resolution source not parsed from market metadata — open rules before entry");
+  }
+  if(meta.clarification) warnings.push("Clarification/additional context detected — review before entry");
+  if(w.feed?.provider==="OPEN_METEO_FORECAST_PROXY") warnings.push("Open-Meteo is forecast/proxy only — never counted as observed station high or resolution evidence");
+
+  let risk=0;
+  if(!meta.namedSource) risk+=.25;
+  if(!meta.explicitStation) risk+=.20;
+  if(w.mode==="RESOLUTION") risk+=.08; // historical observation is still a provisional proxy unless official source is confirmed
+  if(w.mode==="LIVE" && (!w.feed || !w.feed.verifiedStation || w.feed.status!=="LIVE")) risk+=.35;
+  if(w.feed && w.feed.provider==="OPEN_METEO_FORECAST_PROXY") risk+=.20;
+  if(meta.clarification) risk+=.15;
+  risk=clamp(risk,0,.95);
+
+  const dataStatus=w.mode==="FORECAST"?"FORECAST / MODEL ONLY":w.mode==="LIVE"?(w.feed?.verifiedStation?"VERIFIED STATION LIVE + MODEL":"MODEL ONLY / LIVE BLOCKED"):"AWAIT EXACT OFFICIAL RESOLUTION SOURCE";
+  return {
+    pass,label:pass?"PASS":"BLOCKED",reasons,warnings,risk,dataStatus,meta,
+    strictVerified:!!c.st && meta.explicitStation && meta.namedSource
+  };
+}
+// v4.8: anti-overconfidence / exact-bucket guard.
+// Regression target: Sep-19 paper test (Warsaw 23C, Cape Town 24C, Ankara 25C).
+// We do NOT hard-code those outcomes; the guard generalizes to every exact bucket.
+function v48BucketGuard(c,w,side){
+  const reasons=[];
+  if(!c?.exact || side!=="YES") return {pass:true,reasons,sep:null,top:null,second:null};
+  const d=(w?.dist||[]).slice().sort((a,b)=>b.p-a.p);
+  const top=d[0]||null, second=d[1]||null;
+  const sep=top ? top.p-(second?.p||0) : null;
+  if(!top) reasons.push("V4.8: bucket distribution unavailable");
+  else if(top.bucket!==c.v) reasons.push(`V4.8 TOP-BUCKET: contract ${c.v}° is not model #1 (${top.bucket}° ${pct(top.p)})`);
+  if(top && top.p<.60) reasons.push(`V4.8 TOP-P: #1 bucket ${pct(top.p)} < 60%`);
+  if(top && second && sep<.15) reasons.push(`V4.8 SEPARATION: P1-P2 ${pct(sep)} < 15pp`);
+  return {pass:reasons.length===0,reasons,sep,top,second};
+}
+function v48RemainingWarmingGuard(c,w){
+  const reasons=[];
+  if(w?.mode!=="LIVE" || !Number.isFinite(w?.obs)) return {pass:true,reasons};
+  const floor=Math.ceil(w.obs-1e-9);
+  if(c?.exact && c.v<floor) reasons.push(`V4.8 OBSERVED-MAX LOCK: observed ${round1(w.obs)}° already excludes ${c.v}°`);
+  const local=tzParts(w.loc.tz), peak=Number.isFinite(w.peakHour)?w.peakHour:15;
+  const mins=(local.hour*60+local.minute)-(peak*60);
+  if(c?.exact && mins>180 && c.v>w.obs+1.5) reasons.push(`V4.8 REMAINING-WARMING: >3h after expected peak; ${c.v}° needs >1.5° additional warming`);
+  return {pass:reasons.length===0,reasons};
+}
+function v48StationBias(icao){
+  // Learned station corrections can be accumulated without changing code.
+  // Format in localStorage key weh_station_bias_v48: {"EPWA":-0.2,"FACT":0.1}
+  try{const x=JSON.parse(localStorage.getItem("weh_station_bias_v48")||"{}"); return Number.isFinite(+x?.[icao])?+x[icao]:0;}catch(e){return 0;}
+}
+function v481ProbabilityGuard(c,w,b){
+  const reasons=[];
+  const yes=contractProbabilityFromDistribution(c,w?.dist||[]);
+  const no=Number.isFinite(yes)?1-yes:null;
+  if(!Number.isFinite(yes)) reasons.push("V4.8.1 CONTRACT-P: bucket distribution cannot produce YES probability");
+  if(Number.isFinite(yes) && Number.isFinite(w?.p) && Math.abs(yes-w.p)>.005){
+    reasons.push(`V4.8.1 CONTRACT-P MISMATCH: distribution ${pct(yes)} vs model ${pct(w.p)}`);
+  }
+  const expected=b?.side==="YES"?yes:no;
+  if(Number.isFinite(expected) && Number.isFinite(b?.rawProb) && Math.abs(expected-b.rawProb)>.005){
+    reasons.push(`V4.8.1 SIDE-P MISMATCH: ${b.side} should be ${pct(expected)}, got ${pct(b.rawProb)}`);
+  }
+  if(Number.isFinite(yes) && Number.isFinite(no) && Math.abs((yes+no)-1)>1e-9){
+    reasons.push("V4.8.1 COMPLEMENT ERROR: YES + NO != 100%");
+  }
+  return {pass:reasons.length===0,reasons,yes,no,expected};
+}
+function v482ExecutionTruthGuard(m,w,p,b,stake){
+  const reasons=[];
+  const side=b?.side;
+  const pr=b?.pr;
+  const isYes=side==="YES";
+  const depth=isYes?p?.yDepthVerified:p?.nDepthVerified;
+  const oppDepth=isYes?p?.nDepthVerified:p?.yDepthVerified;
+  const source=isYes?p?.ySource:p?.nSource;
+  const vwap=isYes?p?.yVwap:p?.nVwap;
+  const top=isYes?p?.yTop:p?.nTop;
+  const oppTop=isYes?p?.nTop:p?.yTop;
+  const avail=isYes?p?.yAvailableNotional:p?.nAvailableNotional;
+  const fresh=isYes?p?.yFresh:p?.nFresh;
+  const age=isYes?p?.yBookAgeSec:p?.nBookAgeSec;
+  const assetVerified=isYes?p?.yAssetVerified:p?.nAssetVerified;
+  const conditionVerified=isYes?p?.yConditionVerified:p?.nConditionVerified;
+  const bookTimestamp=isYes?p?.yBookTimestamp:p?.nBookTimestamp;
+  const selectedRef=isYes?p?.yRef:p?.nRef;
+  const state=marketExecutionState(m,w);
+  const tokenMap=p?.tokenMap||clobTokenMap(m);
+
+  if(!state.pass) reasons.push(...state.reasons);
+  if(!tokenMap.pass) reasons.push(...tokenMap.reasons);
+  if(!Number.isFinite(pr) || pr<=0 || pr>=1) reasons.push("V4.8.2 EXECUTABLE QUOTE: zero/missing/invalid price");
+  if(!String(source||"").startsWith("CLOB_")) reasons.push("V4.8.2 EXECUTABLE QUOTE: non-CLOB source");
+  if(!assetVerified) reasons.push("V4.8.2 TOKEN MAP: CLOB book asset_id does not match selected token_id");
+  if(conditionVerified===false) reasons.push("V4.8.2 TOKEN MAP: CLOB book market/condition does not match Gamma conditionId");
+  if(!bookTimestamp) reasons.push("V4.8.2 QUOTE FRESHNESS: CLOB book timestamp unavailable");
+  else if(!fresh) reasons.push(`V4.8.2 QUOTE FRESHNESS: book age ${Math.round(age||0)}s > 300s`);
+  if(!depth) reasons.push(`V4.8.2 VWAP/DEPTH: $${(+stake||5).toFixed(2)} fill not verified`);
+  if(depth && !Number.isFinite(vwap)) reasons.push("V4.8.2 VWAP: verified depth but VWAP missing");
+
+  // Extreme-price anomaly: low/high prices are allowed only when the opposite token also
+  // has executable depth, the two ask books are complementary, and Gamma broadly corroborates.
+  const extreme=Number.isFinite(pr) && (pr<=.0025 || pr>=.9975);
+  let anomalyPass=true, pairSum=null;
+  if(extreme){
+    anomalyPass=false;
+    if(!oppDepth) reasons.push("V4.8.2 PRICE ANOMALY: extreme quote without executable opposite-side depth");
+    if(Number.isFinite(top) && Number.isFinite(oppTop)){
+      pairSum=top+oppTop;
+      if(pairSum<.95 || pairSum>1.10) reasons.push(`V4.8.2 BOOK SANITY: YES/NO top asks sum to ${pct(pairSum)}, outside 95–110%`);
+    } else reasons.push("V4.8.2 BOOK SANITY: two-sided top asks unavailable");
+    const refOk=Number.isFinite(selectedRef) && Math.abs(selectedRef-pr)<=.05;
+    if(!refOk) reasons.push("V4.8.2 PRICE ANOMALY: extreme CLOB quote not corroborated by Gamma reference within 5pp");
+    anomalyPass=oppDepth && Number.isFinite(pairSum) && pairSum>=.95 && pairSum<=1.10 && refOk;
+  }
+
+  return {
+    pass:reasons.length===0,reasons,source,depthVerified:!!depth,vwap,top,availableNotional:avail,
+    fresh:!!fresh,bookAgeSec:age,bookTimestamp,assetVerified:!!assetVerified,
+    conditionVerified,tokenMapPass:!!tokenMap.pass,marketStatePass:!!state.pass,
+    extremePrice:extreme,anomalyPass,pairAskSum:pairSum
+  };
+}
+function score(m,c,w,p){
+  const s=sett(),a=[];
+  const gate=resolutionGate(m,c,w);
+  const timing=timingSignal(w,c,p);
+
+  // Contract YES probability comes ONLY from the displayed/conditioned discrete
+  // distribution. NO is its exact mathematical complement.
+  const contractYesP=contractProbabilityFromDistribution(c,w.dist||[]);
+  if(!Number.isFinite(contractYesP)) throw Error("contract probability unavailable");
+  const contractNoP=1-contractYesP;
+  w.p=contractYesP;
+
+  const effectiveYes=clamp(contractYesP*(1-gate.risk*.55),0,1);
+  const effectiveNo=clamp(contractNoP*(1-gate.risk*.55),0,1);
+  const costBuffer=s.fee+s.slip;
+
+  if(Number.isFinite(p.y) && p.y>0 && p.y<1){
+    a.push({side:"YES",pr:p.y,rawProb:contractYesP,prob:effectiveYes,
+      modelEdge:contractYesP-p.y,resEdge:effectiveYes-p.y,edge:effectiveYes-p.y-costBuffer,
+      sp:p.ySpread,quoteSource:p.ySource,depthVerified:p.yDepthVerified,vwap:p.yVwap,top:p.yTop});
+  }
+  if(Number.isFinite(p.n) && p.n>0 && p.n<1){
+    a.push({side:"NO",pr:p.n,rawProb:contractNoP,prob:effectiveNo,
+      modelEdge:contractNoP-p.n,resEdge:effectiveNo-p.n,edge:effectiveNo-p.n-costBuffer,
+      sp:p.nSpread,quoteSource:p.nSource,depthVerified:p.nDepthVerified,vwap:p.nVwap,top:p.nTop});
+  }
+  if(!a.length) throw Error("NO_EXECUTABLE_CLOB_QUOTE");
+
+  a.sort((x,y)=>y.edge-x.edge);
+  const b=a[0], r=[];
+  if(!gate.pass) r.push("RESOLUTION GUARD BLOCKED: "+gate.reasons.join("; "));
+  if(gate.risk>s.maxResRisk) r.push(`resolution risk ${pct(gate.risk)} > ${pct(s.maxResRisk)}`);
+  if(b.edge<s.e) r.push(`executable edge ${pct(b.edge)} < ${pct(s.e)}`);
+  if(c.exact && b.side==="YES" && b.rawProb<.18) r.push(`calibrated exact-bucket probability ${pct(b.rawProb)} < 18% floor`);
+  if(w.conf<s.c) r.push(`confidence ${pct(w.conf)} < ${pct(s.c)}`);
+  if(b.sp!=null && b.sp>s.s) r.push(`spread ${pct(b.sp)} > ${pct(s.s)}`);
+  if(p.liq && p.liq<s.l) r.push(`liquidity ${money(p.liq)} < ${money(s.l)}`);
+  if(timing.block) r.push(`timing ${timing.stage} — best check ${timing.best}`);
+
+  const bucketGuard=v48BucketGuard(c,w,b.side);
+  const warmingGuard=v48RemainingWarmingGuard(c,w);
+  const probabilityGuard=v481ProbabilityGuard(c,w,b);
+  const quoteGuard=v482ExecutionTruthGuard(m,w,p,b,s.stake);
+
+  if(!bucketGuard.pass) r.push(...bucketGuard.reasons);
+  if(!warmingGuard.pass) r.push(...warmingGuard.reasons);
+  if(!probabilityGuard.pass) r.push(...probabilityGuard.reasons);
+  if(!quoteGuard.pass) r.push(...quoteGuard.reasons);
+
+  let decision="BET";
+  if(!gate.pass || gate.risk>s.maxResRisk) decision="PASS";
+  else if(!bucketGuard.pass || !warmingGuard.pass || !probabilityGuard.pass || !quoteGuard.pass) decision="PASS";
+  else if(r.length || timing.block) decision="WAIT";
+
+  const side=decision==="BET"?b.side:"PASS";
+  const grade=decision==="BET"?(b.edge>=.15&&w.conf>=.85?"A+":b.edge>=.10&&w.conf>=.78?"A":"B"):decision;
+
+  return {
+    q:m.question||"",slug:m.slug||"",c,w,p,gate,mode:w.mode||"OTHER",modeLabel:w.modeLabel||"UNKNOWN",
+    side,cand:b.side,pr:b.pr,rawP:b.rawProb,mp:b.prob,modelEdge:b.modelEdge,resEdge:b.resEdge,edge:b.edge,
+    costBuffer,fee:s.fee,slip:s.slip,conf:w.conf,g:grade,r,decision,stake:s.stake,timing,
+    bucketGuard,warmingGuard,probabilityGuard,quoteGuard,contractYesP,contractNoP,selectedSpread:b.sp,
+    url:m.slug?`https://polymarket.com/event/${m.slug}`:"https://polymarket.com"
+  };
+}
+async function gem(x){
+  if($("guse").value==="off" || x.side==="PASS") return null;
+  const key=$("gkey").value.trim();
+  if(!key) return null;
+
+  sessionStorage.setItem("weh_key",key);
+  const model=$("gmodel").value.trim();
+
+  const body={
+    systemInstruction:{parts:[{text:
+      "You explain a quantitative Polymarket weather signal. Never change supplied numbers. Never guarantee profit. Bulgarian, <=110 words. Return ACTION, WHY, RESOLUTION RISK, INVALIDATION."
+    }]},
+    contents:[{parts:[{text:JSON.stringify({
+      question:x.q,marketMode:x.mode,marketModeLabel:x.modeLabel,decision:x.decision,side:x.side,entry:x.pr,rawEventProbability:x.rawP,effectiveResolutionProbability:x.mp,modelEdge:x.modelEdge,resolutionAdjustedEdge:x.resEdge,executableEdge:x.edge,costBuffer:x.costBuffer,confidence:x.conf,
+      spread:x.selectedSpread,liquidity:x.p.liq,contract:x.c,contractYesP:x.contractYesP,contractNoP:x.contractNoP,quoteGuard:x.quoteGuard,
+      weather:{members:x.w.n,mean:x.w.mean,sd:x.w.sd,observedMax:x.w.obs,stationFeed:x.w.feed?.status},
+      resolutionGate:x.gate
+    })}]}],
+    generationConfig:{temperature:.1,maxOutputTokens:260}
+  };
+
+  try{
+    const d=await J(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`,{
+      method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)
+    });
+    return d.candidates?.[0]?.content?.parts?.map(z=>z.text||"").join("")||null;
+  }catch(e){ return null; }
+}
+
+function logSignal(x){
+  const a=JSON.parse(localStorage.getItem("weh_logs_v483")||"[]");
+  a.push({
+    at:new Date().toISOString(),q:x.q,decision:x.decision,side:x.side,candidate:x.cand,entry:x.pr,
+    rawP:x.rawP,effectiveP:x.mp,contractYesP:x.contractYesP,contractNoP:x.contractNoP,
+    modelEdge:x.modelEdge,resolutionAdjustedEdge:x.resEdge,executableEdge:x.edge,fees:x.fee,slippage:x.slip,costBuffer:x.costBuffer,
+    quoteSource:x.quoteGuard?.source,quoteTop:x.quoteGuard?.top,quoteVwap:x.quoteGuard?.vwap,
+    quoteDepthVerified:x.quoteGuard?.depthVerified,availableNotional:x.quoteGuard?.availableNotional,
+    quoteFresh:x.quoteGuard?.fresh,quoteBookAgeSec:x.quoteGuard?.bookAgeSec,quoteBookTimestamp:x.quoteGuard?.bookTimestamp,
+    quoteAssetVerified:x.quoteGuard?.assetVerified,quoteConditionVerified:x.quoteGuard?.conditionVerified,
+    tokenMapPass:x.quoteGuard?.tokenMapPass,marketStatePass:x.quoteGuard?.marketStatePass,
+    extremePrice:x.quoteGuard?.extremePrice,anomalyPass:x.quoteGuard?.anomalyPass,pairAskSum:x.quoteGuard?.pairAskSum,
+    referenceYes:x.p.yRef,referenceNo:x.p.nRef,quoteErrors:x.p.quoteErrors||[],
+    conf:x.conf,spread:x.selectedSpread,liq:x.p.liq,station:x.c.st?.icao,stationSource:x.c.st?.src,
+    marketCity:marketLocationName({question:x.q}),mappingVerified:!!x.c.st?.mappingVerified,date:x.c.date,stake:x.stake,
+    gate:x.gate?.label,resolutionRisk:x.gate?.risk,resolutionSource:x.gate?.meta?.source,dataStatus:x.gate?.dataStatus,
+    mode:x.mode,modeLabel:x.modeLabel,timingStage:x.timing?.stage,timeZoneEdge:x.timing?.edgeType,bestCheckBG:x.timing?.best,
+    peakHourLocal:x.w.peakHour,feed:x.w.feed?.status,verifiedStation:!!x.w.feed?.verifiedStation,obsAgeMin:x.w.feed?.ageMin,
+    bucketDistribution:x.w.dist||[],topBucket:x.w.topBucket||null,memberVoteProbability:x.w.voteP,
+    memberBucketDistribution:x.w.memberDist||[],calibrationSigma:x.w.calSigma,calibrationModel:x.w.calibrationModel||null,
+    kernelEventP:x.w.kernelP,contractPFromDist:x.w.contractPFromDist,stationBias:x.w.stationBias,
+    liveObservedFloor:(x.w.mode==="LIVE"&&Number.isFinite(x.w.obs)?Math.ceil(x.w.obs-1e-9):null),observedHigh:x.w.obs,
+    probabilityGuard:x.probabilityGuard,quoteGuard:x.quoteGuard
+  });
+  if(a.length>3000) a.splice(0,a.length-3000);
+  localStorage.setItem("weh_logs_v483",JSON.stringify(a));
+}
+function card(x,enter){
+  const feed=x.w.feed;
+  const rulePill=x.gate.strictVerified
+    ? `<span class="pill good">SOURCE + STATION EXPLICIT</span>`
+    : `<span class="pill warn">VERIFY RULE SOURCE/STATION</span>`;
+  const metarPill=feed?.verifiedStation
+    ? `<span class="pill ${feed.status==="LIVE"?"good":"warn"}">VERIFIED STATION ${esc(feed.status)}${Number.isFinite(feed.ageMin)?" · "+Math.round(feed.ageMin)+"m":""}</span>`
+    : `<span class="pill bad">NO VERIFIED STATION FEED</span>`;
+  const sourceLine=x.mode==="RESOLUTION"?`Official-resolution evidence unavailable in-browser unless exact settlement source is ingested.`:`Ensemble ${x.w.n}; mean ${round1(x.w.mean)}°${x.c.u}, σ ${round1(x.w.sd)}°. Discrete buckets: ${bucketSummary(x.w.dist||[],x.c.u)||"—"}.`;
+  const action=x.decision==="BET"?`READY ${x.cand} · $${x.stake.toFixed(0)} · MANUAL CONFIRM`:x.decision;
+  const dclass=x.decision==="BET"?"bet":x.decision==="WAIT"?"wait":"pass";
+  const warnings=[...(x.gate.warnings||[]),...(x.r||[])];
+  const reason=x.ai || `${action}\n${x.modeLabel}. Timing: ${x.timing?.stage||"—"}; ${x.timing?.edgeType||"NORMAL"}; best check ${x.timing?.best||"—"}. ${sourceLine}\n${x.cand} P ${pct(x.rawP)} (YES ${pct(x.contractYesP)} / NO ${pct(x.contractNoP)}) vs executable entry ${pct(x.pr)} → model edge ${pct(x.modelEdge)} → resolution-adjusted edge ${pct(x.resEdge)} → executable edge ${pct(x.edge)} after ${pct(x.costBuffer)} cost buffer.\nResolution source: ${x.gate.meta.source}; data: ${x.gate.dataStatus}; resolution risk ${pct(x.gate.risk)}.\n${warnings.length?"Notes: "+warnings.join("; "):"Guard and risk filters passed."}`;
+  const marketTz=x.w.loc?.tz||SOFIA, sourceTz=x.gate.meta.sourceTz||marketTz||"UTC";
+
+  return `<div class="card">
+    <div class="row">
+      <div>
+        <div class="q">${esc(x.q)}</div>
+        <div class="meta">${esc(x.c.st?x.c.st.city+" · "+x.c.st.icao+" · "+x.c.st.src:x.w.loc.name+" · station unverified")} · ${esc(x.c.date||"?")} · ${esc(x.c.label||"")}</div>
+      </div>
+      <div class="metric"><span class="lab">Decision</span><b class="decision ${dclass}">${esc(action)}</b></div>
+      <div class="metric"><span class="lab">Entry</span><b>${pct(x.pr)}</b></div>
+      <div class="metric"><span class="lab">Effective P</span><b>${pct(x.mp)}</b></div>
+      <div class="metric"><span class="lab">Model edge</span><b>${pct(x.modelEdge)}</b></div>
+      <div class="metric"><span class="lab">Res-adj edge</span><b>${pct(x.resEdge)}</b></div>
+      <div class="metric"><span class="lab">Executable edge</span><b>${pct(x.edge)}</b></div>
+      <div class="metric"><span class="lab">Conf</span><b>${pct(x.conf)}</b></div>
+      <div class="metric"><span class="lab">Res risk</span><b class="${x.gate.risk<=.15?"g":x.gate.risk<=.30?"y":"r"}">${pct(x.gate.risk)}</b></div>
+      <div class="metric"><span class="lab">Grade</span><b>${x.g}</b></div>
+    </div>
+    <div class="guardgrid" style="margin-top:10px">
+      <div class="guarditem"><span class="lab">Bulgaria</span><b>${esc(formatClock(SOFIA))}</b><span class="small">Europe/Sofia</span></div>
+      <div class="guarditem"><span class="lab">Market local</span><b>${esc(formatClock(marketTz))}</b><span class="small">${esc(marketTz)}</span></div>
+      <div class="guarditem"><span class="lab">Resolution/source</span><b>${esc(formatClock(sourceTz))}</b><span class="small">${esc(sourceTz)}</span></div>
+      <div class="guarditem"><span class="lab">Source</span><b>${esc(x.gate.meta.source)}</b><span class="small">${esc(x.gate.meta.status)}</span></div>
+      <div class="guarditem"><span class="lab">Data status</span><b>${esc(x.gate.dataStatus)}</b><span class="small">Target ${esc(x.c.date||"?")}</span></div>
+      <div class="guarditem"><span class="lab">Timing stage</span><b>${esc(x.timing?.stage||"—")}</b><span class="small">Peak ~ ${Number.isFinite(x.w.peakHour)?String(x.w.peakHour).padStart(2,"0")+":00 local":"—"}</span></div>
+      <div class="guarditem"><span class="lab">Best check</span><b>${esc(x.timing?.best||"—")}</b><span class="small">dynamic from forecast peak</span></div>
+      <div class="guarditem"><span class="lab">Time-zone edge</span><b>${esc(x.timing?.edgeType||"NORMAL")}</b><span class="small">information-maturity flag, not a guarantee</span></div>
+    </div>
+    <div class="pills" style="margin-top:9px">
+      <span class="modebadge ${x.mode==="RESOLUTION"?"resolution":x.mode==="LIVE"?"live":x.mode==="FORECAST"?"forecast":"other"}">${esc(x.modeLabel)}</span>
+      <span class="pill">Side P ${pct(x.rawP)}</span>\n      <span class="pill">YES P ${pct(x.contractYesP)}</span>\n      <span class="pill">NO P ${pct(x.contractNoP)}</span>
+      <span class="pill">Costs ${pct(x.costBuffer)}</span>
+      <span class="pill">Spread ${pct(x.selectedSpread)}</span>
+      <span class="pill">Liquidity ${money(x.p.liq)}</span>
+      <span class="pill">${x.w.n} ensemble members</span>
+      <span class="pill">Top bucket ${x.w.topBucket?esc(`${x.w.topBucket.bucket}°${x.c.u} ${pct(x.w.topBucket.p)}`):"—"}</span>
+      ${metarPill}
+      ${rulePill}
+      ${x.gate.meta.clarification?'<span class="pill warn">CLARIFICATION DETECTED</span>':''}
+    </div>
+    <div class="reason">${esc(reason)}</div>
+    <div class="actions" style="margin-top:9px">
+      <a class="btn" target="_blank" rel="noopener" href="${x.url}">OPEN POLYMARKET + VERIFY RULES</a>
+      ${x.decision==="BET"?`<button class="secondary" onclick="manualConfirm('${esc(x.slug)}')">MANUAL CONFIRM MICRO-LIVE</button>`:""}
+    </div>
+  </div>`;
+}
+function setModeFilter(mode){
+  modeFilter=mode;
+  document.querySelectorAll(".modebtn").forEach(b=>b.classList.toggle("active",b.dataset.mode===mode));
+  renderScan(lastScan);
+}
+
+function renderScan(out){
+  const counts={ALL:out.length,RESOLUTION:0,LIVE:0,FORECAST:0};
+  out.forEach(x=>{if(counts[x.mode]!=null) counts[x.mode]++;});
+  for(const k of Object.keys(counts)){ const e=$("cnt"+k); if(e) e.textContent=counts[k]; }
+  const view=modeFilter==="ALL"?out:out.filter(x=>x.mode===modeFilter);
+  const st=sett();
+  const cap=Math.min(st.n,Math.max(1,Math.floor(st.maxExposure/st.stake)));
+  const en=view.filter(x=>x.decision==="BET").slice(0,cap);
+  const pa=view.filter(x=>x.decision!=="BET").slice(0,24);
+  $("qual").textContent=en.length;
+  $("entries").innerHTML=en.length?en.map(x=>card(x,true)).join(""):'<div class="panel small">NO TRADE — няма market в този date mode, минал Resolution Guard + Execution Truth + operational risk + executable edge + confidence + spread + liquidity + exposure caps.</div>';
+  $("passes").innerHTML=pa.length?pa.map(x=>card(x,false)).join(""):'<div class="panel small">Няма Watch/Pass markets в избрания date mode.</div>';
+}
+
+async function scanAll(){
+  if(busy) return;
+  busy=true;
+  $("scanBtn").disabled=true;
+  $("status").className="status";
+  $("status").textContent="Scanning v4.8.3: rules/station → calibrated bucket distribution → contract P → YES/NO complement → market state → token mapping → fresh CLOB book → VWAP/depth → Execution Truth Gate → Risk Manager…";
+
+  try{
+    mappingBlocks=[];
+    localStorage.setItem("weh_logs_v483","[]");
+    const ms=await discover(true);
+    const syncInfo=await syncDynamicStations(ms);
+    await refreshStations(false);
+    $("markets").textContent=ms.length;
+
+    const out=[],q=[...ms];
+
+    async function worker(){
+      while(q.length){
+        const m=q.shift();
+        try{
+          const c=contract(m);
+          if(!c) continue;
+          const mg=hardMappingGuard(m,c);
+          if(!mg.pass){
+            mappingBlocks.push({
+              at:new Date().toISOString(),
+              q:m.question||"",
+              slug:m.slug||"",
+              reason:mg.reason,
+              marketCity:mg.marketCity,
+              rulesSite:mg.site,
+              station:mg.station,
+              stationSource:mg.stationSource
+            });
+            continue; // HARD BLOCK before price/weather/model/signal generation
+          }
+          const [p,w]=await Promise.all([price(m),wx(c,m)]);
+          const x=score(m,c,w,p);
+          x.ai=await gem(x);
+          logSignal(x);
+          out.push(x);
+        }catch(e){
+          console.warn(m?.question,e);
+        }
+      }
+    }
+
+    await Promise.all(Array.from({length:Math.min(4,ms.length||1)},worker));
+    out.sort((a,b)=>b.edge-a.edge);
+    applyOperationalGuards(out);
+
+    lastScan=out;
+    renderScan(out);
+    const first=out.find(x=>x.decision==="BET")||out[0];
+    activeMarketTz=first?.w?.loc?.tz||null;
+    activeSourceTz=first?.gate?.meta?.sourceTz||activeMarketTz||"UTC";
+    updateClocks();
+    const qn=(modeFilter==="ALL"?out:out.filter(x=>x.mode===modeFilter)).filter(x=>x.decision==="BET").length;
+    $("status").className="status good";
+    $("status").textContent=`Ready: ${ms.length} weather markets → ${out.length} analyzed · ${mappingBlocks.length} mapping-blocked · ${ST.filter(x=>x.activePolymarket).length} active stations · ${dynamicStationCodes.size} NOAA codes · resolution ${out.filter(x=>x.mode==="RESOLUTION").length} · live ${out.filter(x=>x.mode==="LIVE").length} · forecast ${out.filter(x=>x.mode==="FORECAST").length} → ${qn} qualified.`;
+  }catch(e){
+    $("status").className="status bad";
+    $("status").textContent="Error: "+e.message+" — възможен CORS/API проблем. Виж Console за подробности.";
+  }finally{
+    busy=false;
+    $("scanBtn").disabled=false;
+  }
+}
+
+function startFocus(){
+  stopMonitor();
+  const s=sett();
+  focusEnd=Date.now()+40*60000;
+  nextRun=Date.now()+s.r*1000;
+  scanAll();
+
+  mon=setInterval(()=>{
+    if(Date.now()>=focusEnd){ stopMonitor(); return; }
+    scanAll();
+    nextRun=Date.now()+s.r*1000;
+  },s.r*1000);
+
+  tick=setInterval(updateTimers,1000);
+  updateTimers();
+}
+
+function stopMonitor(){
+  if(mon) clearInterval(mon);
+  if(tick) clearInterval(tick);
+  mon=tick=null;
+  focusEnd=nextRun=0;
+  $("refresh").textContent="—";
+  $("focus").textContent="OFF";
+}
+
+function updateTimers(){
+  if(nextRun){
+    const s=Math.max(0,Math.ceil((nextRun-Date.now())/1000));
+    $("refresh").textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;
+  }
+  if(focusEnd){
+    const s=Math.max(0,Math.ceil((focusEnd-Date.now())/1000));
+    $("focus").textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;
+  }
+}
+
+async function saveProxy(){
+  const v=$("proxyBaseInput").value.trim();
+  setProxyBase(v);
+  $("status").className=v?"status good":"status warn";
+  $("status").textContent=v?`Backend saved: ${v}`:"Backend cleared. Browser-only fallback active.";
+}
+
+async function runSelfTest(){
+  const tests=[];
+  async function t(name,fn){ try{ const v=await fn(); tests.push(`✅ ${name}: ${v}`);} catch(e){tests.push(`❌ ${name}: ${e.message}`);} }
+  $("status").className="status"; $("status").textContent="Running API self-test…";
+  await t("Polymarket Gamma",async()=>{const d=await J("https://gamma-api.polymarket.com/markets?active=true&closed=false&limit=1");return Array.isArray(d)?"reachable":"unexpected response";});
+  await t("Polymarket CLOB",async()=>{await J("https://clob.polymarket.com/time");return "reachable";});
+  await t("v4.8.2 contract probability",async()=>{
+    const d=normalizeDistribution([{bucket:92,p:.41},{bucket:93,p:.31},{bucket:94,p:.18},{bucket:95,p:.10}]);
+    const c={lo:92,hi:93};
+    const yes=contractProbabilityFromDistribution(c,d), no=1-yes;
+    if(Math.abs(yes-.72)>.000001 || Math.abs(yes+no-1)>1e-9) throw Error(`bad mapping ${yes}/${no}`);
+    return `YES ${pct(yes)} · NO ${pct(no)}`;
+  });
+  await t("v4.8.2 zero quote block",async()=>{
+    if(validClobPrice(0)!==null || validClobPrice(1)!==null || validClobPrice(.01)!==.01) throw Error("quote validation failed");
+    return "0/1 blocked; 1¢ valid";
+  });
+  await t("v4.8.2 token map",async()=>{
+    const tm=clobTokenMap({clobTokenIds:'["Y","N"]',outcomes:'["Yes","No"]',conditionId:"C"});
+    if(!tm.pass || tm.yToken!=="Y" || tm.nToken!=="N") throw Error("token mapping failed");
+    return "YES/NO token map verified";
+  });
+  await t("v4.8.2 market-state hard block",async()=>{
+    const st=marketExecutionState({active:true,closed:false,acceptingOrders:true,enableOrderBook:true},{mode:"RESOLUTION"});
+    if(st.pass) throw Error("resolution mode was not blocked");
+    return "resolution-mode new entries blocked";
+  });
+  await t("Micro-live kill switch",async()=>{
+    const st=sett();
+    return (st.dailyLossCap>0 && st.maxConsecLoss>0 && st.maxEventExposure>0)?"configured":"invalid limits";
+  });
+  if(!proxyBase()) tests.push("❌ Weather backend: URL not configured");
+  else {
+    await t("Weather backend",async()=>{const d=await J(`${proxyBase()}/health`);return d?.ok?`reachable v${d.version}`:"unexpected response";});
+    await t("Backend METAR",async()=>{const d=await J(`${proxyBase()}/api/station?icao=KSFO&tz=America%2FLos_Angeles`);return d?.observation?.verifiedStation?"verified station feed":"no verified rows";});
+    await t("Backend forecast",async()=>{const d=await J(`${proxyBase()}/api/forecast?icao=KSFO&lat=37.6213&lon=-122.379&tz=America%2FLos_Angeles`);return d?.forecast?.ok?"calibrated 3-model forecast reachable":(d?.forecast?.error||"no forecast");});
+  }
+  $("status").className=tests.every(x=>x.startsWith("✅"))?"status good":"status bad";
+  $("status").textContent=tests.join(" | ");
+}
+
+function exportLogs(){
+  const payload={
+    exportedAt:new Date().toISOString(),
+    version:"4.8.3-micro-live-safety-gate",
+    settings:sett(),
+    stationSnapshot:[...stationCache.entries()].map(([icao,o])=>({
+      icao,status:o.status,currentC:o.currentC,yesterdayHighC:o.yesterdayHighC,highC:o.highC,
+      lastObs:o.lastObs?o.lastObs.toISOString():null,ageMin:o.ageMin,error:o.error
+    })),
+    forecastWindow:[...forecastCache.entries()].map(([icao,f])=>({icao,today:f.today,tomorrow:f.tomorrow,error:f.error})),
+    mappingBlocks,
+    liveRisk:ledgerRiskState(),
+    liveLedger:liveLedger(),
+    signals:JSON.parse(localStorage.getItem("weh_logs_v483")||"[]")
+  };
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="weather-edge-hunter-v4_8_3-polymarket-only-log.json";
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),500);
+}
+
+(function init(){
+  const k=sessionStorage.getItem("weh_key");
+  if(k) $("gkey").value=k;
+  updateClocks();
+  setInterval(updateClocks,1000);
+  refreshStations(true).catch(console.warn);
+  renderLedger();
+  setInterval(()=>refreshStations(false).catch(console.warn),60000);
+})();
+
+setTimeout(()=>{ if($("proxyBaseInput")) $("proxyBaseInput").value=proxyBase(); },0);
+</script>
+</body>
+</html>
